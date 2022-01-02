@@ -1,0 +1,76 @@
+﻿  VotingOption.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(138,52): error C2440: 'initializing': cannot convert from 'initializer list' to '_Ty'
+          with
+          [
+              _Ty=char
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(138,52): message : The initializer contains too many elements
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\memory(2186): message : see reference to function template instantiation 'void std::_Construct_in_place<_Ty,char*,std::default_delete<char []>>(_Ty &,char *&&,std::default_delete<char []> &&) noexcept(false)' being compiled
+          with
+          [
+              _Ty=char
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\memory(2906): message : see reference to function template instantiation 'std::_Ref_count_obj2<_Ty>::_Ref_count_obj2<char*,std::default_delete<char []>>(char *&&,std::default_delete<char []> &&)' being compiled
+          with
+          [
+              _Ty=char
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\memory(2907): message : see reference to function template instantiation 'std::_Ref_count_obj2<_Ty>::_Ref_count_obj2<char*,std::default_delete<char []>>(char *&&,std::default_delete<char []> &&)' being compiled
+          with
+          [
+              _Ty=char
+          ]
+D:\ikp_projekat\project\IKP_project\Common\src\VotingOption.cpp(56): message : see reference to function template instantiation 'std::shared_ptr<char> std::make_shared<char,char*,std::default_delete<char []>>(char *&&,std::default_delete<char []> &&)' being compiled
+  VotingList.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(5500,1): error C2679: binary '==': no operator found which takes a right-hand operand of type 'const _Ty' (or there is no acceptable conversion)
+          with
+          [
+              _Ty=VotingList::FindOption::<lambda_08b893187400006eb673849d5ed004fd>
+          ]
+D:\ikp_projekat\project\IKP_project\Common\include\Common\VotingOption.h(27,7): message : could be 'bool VotingOption::operator ==(const VotingOption &)'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(5500,1): message : while trying to match the argument list '(VotingOption, const _Ty)'
+          with
+          [
+              _Ty=VotingList::FindOption::<lambda_08b893187400006eb673849d5ed004fd>
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(5534): message : see reference to function template instantiation '_InIt std::_Find_unchecked1<_InIt,_Ty>(_InIt,const _InIt,const _Ty &,std::false_type)' being compiled
+          with
+          [
+              _InIt=VotingOption *,
+              _Ty=VotingList::FindOption::<lambda_08b893187400006eb673849d5ed004fd>
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(5540): message : see reference to function template instantiation '_InIt std::_Find_unchecked<VotingOption*,_Ty>(const _InIt,const _InIt,const _Ty &)' being compiled
+          with
+          [
+              _InIt=VotingOption *,
+              _Ty=VotingList::FindOption::<lambda_08b893187400006eb673849d5ed004fd>
+          ]
+D:\ikp_projekat\project\IKP_project\Common\src\VotingList.cpp(46): message : see reference to function template instantiation '_InIt std::find<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,VotingList::FindOption::<lambda_08b893187400006eb673849d5ed004fd>>(_InIt,const _InIt,const VotingList::FindOption::<lambda_08b893187400006eb673849d5ed004fd> &)' being compiled
+          with
+          [
+              _InIt=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<VotingOption>>>,
+              _Ty=VotingOption
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(138,52): error C2440: 'initializing': cannot convert from 'initializer list' to '_Ty'
+          with
+          [
+              _Ty=char
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\xutility(138,52): message : The initializer contains too many elements
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\memory(2186): message : see reference to function template instantiation 'void std::_Construct_in_place<_Ty,char*,std::default_delete<char []>>(_Ty &,char *&&,std::default_delete<char []> &&) noexcept(false)' being compiled
+          with
+          [
+              _Ty=char
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\memory(2906): message : see reference to function template instantiation 'std::_Ref_count_obj2<_Ty>::_Ref_count_obj2<char*,std::default_delete<char []>>(char *&&,std::default_delete<char []> &&)' being compiled
+          with
+          [
+              _Ty=char
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\include\memory(2907): message : see reference to function template instantiation 'std::_Ref_count_obj2<_Ty>::_Ref_count_obj2<char*,std::default_delete<char []>>(char *&&,std::default_delete<char []> &&)' being compiled
+          with
+          [
+              _Ty=char
+          ]
+D:\ikp_projekat\project\IKP_project\Common\src\VotingList.cpp(69): message : see reference to function template instantiation 'std::shared_ptr<char> std::make_shared<char,char*,std::default_delete<char []>>(char *&&,std::default_delete<char []> &&)' being compiled
+  Generating Code...

@@ -90,6 +90,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -107,6 +108,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -124,6 +126,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -141,6 +144,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -151,17 +155,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Common\FinalResult.h" />
+    <ClInclude Include="include\Common\CountedVotes.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="include\Common\CommonMethods.h" />
+    <ClInclude Include="include\Common\VotingList.h" />
+    <ClInclude Include="include\Common\VotingOption.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="include\Common\Vote.h" />
+    <ClInclude Include="include\Common\VotesContainer.h" />
+    <ClInclude Include="include\Common\VotesToCount.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="src\FinalResult.cpp" />
+    <ClCompile Include="src\CountedVotes.cpp" />
+    <ClCompile Include="src\CommonMethods.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\VotingList.cpp" />
+    <ClCompile Include="src\VotingOption.cpp" />
+    <ClCompile Include="src\Vote.cpp" />
+    <ClCompile Include="src\VotesContainer.cpp" />
+    <ClCompile Include="src\VotesToCount.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
