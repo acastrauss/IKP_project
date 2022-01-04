@@ -1,9 +1,2 @@
-﻿  FinalResult.cpp
-  CountedVotes.cpp
-  CommonMethods.cpp
-  VotingList.cpp
-  VotingOption.cpp
-  VotesContainer.cpp
-  VotesToCount.cpp
-  Generating Code...
+﻿  VotingOption.cpp
   Common.vcxproj -> D:\ikp_projekat\project\IKP_project\x64\Debug\Common.lib

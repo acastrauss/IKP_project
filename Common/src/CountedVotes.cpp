@@ -54,7 +54,7 @@ namespace Common {
 		LeaveCriticalSection(&cs);	
 	}
 
-	std::map<size_t, size_t> Common::CountedVotes::GetCountedVotes()
+	std::map<size_t, size_t> Common::CountedVotes::GetCountedVotes() const
 	{
 		return Votes;
 	}

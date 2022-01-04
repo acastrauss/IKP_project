@@ -49,7 +49,7 @@ namespace Common {
 			const std::vector<Common::VotingOption>& options
 		);
 
-		std::map<size_t, size_t> GetCountedVotes();
+		std::map<size_t, size_t> GetCountedVotes() const;
 
 		CountedVotes& operator=(
 			const CountedVotes& rhs

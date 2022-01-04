@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Common\Config.h" />
     <ClInclude Include="include\Common\FinalResult.h" />
     <ClInclude Include="include\Common\CountedVotes.h" />
     <ClInclude Include="framework.h" />
@@ -165,9 +166,12 @@
     <ClInclude Include="include\Common\Vote.h" />
     <ClInclude Include="include\Common\VotesContainer.h" />
     <ClInclude Include="include\Common\VotesToCount.h" />
+    <ClInclude Include="include\Common\Serializable.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="src\Serializable.cpp" />
+    <ClCompile Include="src\Config.cpp" />
     <ClCompile Include="src\FinalResult.cpp" />
     <ClCompile Include="src\CountedVotes.cpp" />
     <ClCompile Include="src\CommonMethods.cpp" />

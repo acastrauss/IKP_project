@@ -45,6 +45,12 @@
     <ClInclude Include="include\Common\FinalResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Common\Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Common\Serializable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -75,6 +81,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\FinalResult.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serializable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
