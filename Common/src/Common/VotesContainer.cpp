@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Common/VotesContainer.h"
 #include "Common/CommonMethods.h"
+#include <algorithm>
 
 namespace Common {
 	VotesContainer::VotesContainer()
@@ -20,28 +21,50 @@ namespace Common {
 		DeleteCriticalSection(&cs);
 	}
 
+	size_t Common::VotesContainer::BufferSize() const
+	{
+		EnterCriticalSection((LPCRITICAL_SECTION)&cs);
+
+		size_t bufferSize = 0;
+		bufferSize += m_Votes.size();
+
+		std::for_each(
+			m_Votes.begin(),
+			m_Votes.end(),
+			[&](const Common::Vote vote) {
+				size_t voteBufferSize = vote.BufferSize();
+				bufferSize += sizeof(voteBufferSize);
+				bufferSize += voteBufferSize;
+			}
+		);
+
+		LeaveCriticalSection((LPCRITICAL_SECTION)&cs);
+
+		return bufferSize;
+	}
+
 	/*VotesContainer& VotesContainer::operator=(const VotesContainer& rhs)
 	{
 		m_Votes = rhs.m_Votes;
 		return *this;
 	}*/
 
-	std::deque<Common::Vote> VotesContainer::GetVotes()
+	std::deque<Common::Vote> VotesContainer::GetVotes() const
 	{
 		
-		EnterCriticalSection(&cs);
+		EnterCriticalSection((LPCRITICAL_SECTION)&cs);
 		std::deque<Common::Vote> ret = m_Votes;
-		LeaveCriticalSection(&cs);
+		LeaveCriticalSection((LPCRITICAL_SECTION)&cs);
 		return ret;
 	}
 
-	std::vector<std::deque<Common::Vote>> VotesContainer::GetEquallySeparatedVotes(size_t parts)
+	std::vector<std::deque<Common::Vote>> VotesContainer::GetEquallySeparatedVotes(size_t parts) const
 	{
 		ASSERT(parts <= m_Votes.size());
 
-		EnterCriticalSection(&cs);
+		EnterCriticalSection((LPCRITICAL_SECTION)&cs);
 		const std::deque<Common::Vote>& currentVotes = m_Votes;
-		LeaveCriticalSection(&cs);
+		LeaveCriticalSection((LPCRITICAL_SECTION)&cs);
 
 		std::vector<std::deque<Common::Vote>> ret = {};
 

@@ -51,6 +51,12 @@
     <ClInclude Include="include\Common\Serializable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Serialization\Serialization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Serialization\Deserialization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -59,34 +65,40 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VotingOption.cpp">
+    <ClCompile Include="src\Common\VotingOption.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CommonMethods.cpp">
+    <ClCompile Include="src\Common\CommonMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vote.cpp">
+    <ClCompile Include="src\Common\Vote.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VotingList.cpp">
+    <ClCompile Include="src\Common\VotingList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VotesContainer.cpp">
+    <ClCompile Include="src\Common\VotesContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VotesToCount.cpp">
+    <ClCompile Include="src\Common\VotesToCount.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CountedVotes.cpp">
+    <ClCompile Include="src\Common\CountedVotes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FinalResult.cpp">
+    <ClCompile Include="src\Common\FinalResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Config.cpp">
+    <ClCompile Include="src\Common\Config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Serializable.cpp">
+    <ClCompile Include="src\Common\Serializable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serialization\Serialization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serialization\Deserialization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

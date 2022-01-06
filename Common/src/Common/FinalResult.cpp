@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Common/FinalResult.h"
 #include <Common/CommonMethods.h>
+#include <algorithm>
 
 
 namespace Common {
@@ -33,6 +34,25 @@ namespace Common {
 	FinalResult::FinalResult(const FinalResult& rhs)
 	{
 		Results = rhs.Results;
+	}
+
+	size_t Common::FinalResult::BufferSize() const
+	{
+		size_t bufferSize = 0;
+
+		bufferSize += Results.size();
+
+		std::for_each(
+			Results.begin(),
+			Results.end(),
+			[&](const std::pair<Common::VotingOption, size_t> result) {
+				bufferSize += sizeof(result.first.BufferSize());
+				bufferSize += result.first.BufferSize();
+				bufferSize += sizeof(result.second);
+			}
+		);
+
+		return bufferSize;
 	}
 
 	FinalResult& FinalResult::operator=(const FinalResult& rhs)

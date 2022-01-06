@@ -9,12 +9,7 @@ namespace Common {
 	class Serializable
 	{
 	public:
-		/// <summary>
-		/// After this method, delete/free should be called!
-		/// </summary>
-		/// <returns></returns>
-		virtual char* Serialize() = 0;
-		virtual size_t BufferSize() = 0;
+		virtual size_t BufferSize() const = 0;
 	};
 }
 

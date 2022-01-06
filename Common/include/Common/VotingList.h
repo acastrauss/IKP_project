@@ -1,15 +1,16 @@
 #pragma once
 
 #include "Common/VotingOption.h"
+#include "Common/Serializable.h"
 #include <vector>
 
 namespace Common {
 
-	typedef std::vector<VotingOption>::iterator vvoit;
+	typedef std::vector<VotingOption>::const_iterator vvocit;
 	/// <summary>
 	/// Class presenting voting options to client
 	/// </summary>
-	class VotingList
+	class VotingList : Serializable
 	{
 	private:
 		std::vector<VotingOption> m_Options;
@@ -28,11 +29,14 @@ namespace Common {
 			const VotingOption& option
 		);
 
-		vvoit FindOption(size_t optionNumber);
+		vvocit FindOption(size_t optionNumber) const;
+
+		size_t BufferSize() const;
+
 
 		void SortOptions();
 
-		std::vector<VotingOption> GetOptions();
+		std::vector<VotingOption> GetOptions() const;
 	};
 
 }

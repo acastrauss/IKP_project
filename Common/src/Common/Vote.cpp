@@ -23,6 +23,14 @@ namespace Common {
 		this->VoteTime = rhs.VoteTime;
 	}
 
+	size_t Vote::BufferSize() const
+	{
+		return
+			sizeof(VoterId) +
+			sizeof(PartyNumber) +
+			sizeof(VoteTime);
+	}
+
 	Vote& Vote::operator=(const Vote& rhs)
 	{
 		this->VoterId = rhs.VoterId;

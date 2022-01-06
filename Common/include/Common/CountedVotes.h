@@ -3,22 +3,23 @@
 #include <map>
 #include <Windows.h>
 #include <deque>
-#include <Common/Vote.h>
 #include <vector>
-#include <Common/VotingOption.h>
+#include "Common/Vote.h"
+#include "Common/VotingOption.h"
+#include "Common/Serializable.h"
 
 namespace Common {
 	/// <summary>
 	/// VotingCoutner will return this to VotingBox
 	/// </summary>
-	class CountedVotes
+	class CountedVotes : Serializable
 	{
 	private:
 		/// <summary>
 		/// Key: Party Number
 		/// Value: Number of votes
 		/// </summary>
-		std::map<size_t, size_t> Votes;
+		std::map<size_t, size_t> m_Votes;
 
 		CRITICAL_SECTION cs;
 
@@ -48,6 +49,9 @@ namespace Common {
 		void AsssignZeroVotes(
 			const std::vector<Common::VotingOption>& options
 		);
+
+		size_t BufferSize() const;
+
 
 		std::map<size_t, size_t> GetCountedVotes() const;
 

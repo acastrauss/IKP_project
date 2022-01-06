@@ -12,6 +12,7 @@
 #include <Common/Vote.h>
 #include <Common/VotingList.h>
 #include <Common/VotingOption.h>
+#include <Serialization/Serialization.h>
 #include <vector>
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -25,21 +26,14 @@ int main()
     // variable used to store function return value
     int iResult;
     // message to send
-    /*Common::Vote myVote(
-        13, 45
-    );*/
-
-
+    
     Common::VotingOption opt1(
         "Pera peric",
         "qwerty",
         134
     );
-
     
-
-    char* messageToSend = opt1.Serialize();
-    
+    char* messageToSend = Serialize(opt1);
 
     if (InitializeWindowsSockets() == false)
     {

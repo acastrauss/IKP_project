@@ -9,6 +9,8 @@
 #include <Common/Vote.h>
 #include <Common/VotingList.h>
 #include <Common/VotingOption.h>
+#include <Serialization/Deserialization.h>
+
 #include <vector>
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -107,7 +109,7 @@ int main()
             iResult = recv(acceptedSocket, recvBuff, defaultBufferLength, 0);
             if (iResult > 0)
             {
-                Common::VotingOption myopt(recvBuff);
+                Common::VotingOption myopt = Deserialize<Common::VotingOption>(recvBuff);
                 int a = 5;
             }
             else if (iResult == 0)

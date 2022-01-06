@@ -31,13 +31,32 @@ namespace Common {
 		m_Options.push_back(option);
 	}
 
-	vvoit VotingList::FindOption(size_t optionNumber)
+	vvocit VotingList::FindOption(size_t optionNumber) const
 	{
 		return std::find_if(
 			m_Options.begin(), m_Options.end(), [=](const VotingOption& vo) {
 				return vo.PartyNumber == optionNumber;
 			}
 		);
+	}
+
+	size_t Common::VotingList::BufferSize() const
+	{
+		size_t bufferSize = 0;
+
+		// meta data: number of options
+		bufferSize += m_Options.size();
+
+		// each option buffer size
+		std::for_each(
+			m_Options.begin(),
+			m_Options.end(),
+			[&](const Common::VotingOption option) {
+				bufferSize += option.BufferSize();
+			}
+		);
+
+		return bufferSize;
 	}
 
 	void VotingList::SortOptions()
@@ -51,7 +70,7 @@ namespace Common {
 		);
 	}
 
-	std::vector<VotingOption> VotingList::GetOptions()
+	std::vector<VotingOption> VotingList::GetOptions() const
 	{
 		return m_Options;
 	}

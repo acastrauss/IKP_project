@@ -12,13 +12,11 @@ namespace Common {
 		std::string PartyName;
 		size_t PartyNumber;
 		
-		explicit VotingOption(
+		VotingOption(
 			std::string PartyLeader,
 			std::string PartyName,
 			size_t PartyNumber
 		);
-
-		explicit VotingOption(char* buffer);
 
 		VotingOption(
 			const VotingOption& ref
@@ -26,9 +24,7 @@ namespace Common {
 
 		VotingOption();
 
-		char* Serialize();
-		size_t BufferSize();
-
+		size_t BufferSize() const;
 
 		VotingOption& operator=(const VotingOption& rhs);
 		bool operator==(const VotingOption& rhs)const;
