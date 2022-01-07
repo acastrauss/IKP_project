@@ -14,6 +14,12 @@ namespace Common {
 		InitializeCriticalSection(&cs);
 	}
 
+	Common::CountedVotes::CountedVotes(const CountedVotes& rhs)
+	{
+		m_Votes = rhs.m_Votes;
+		InitializeCriticalSection(&cs);
+	}
+
 	Common::CountedVotes::~CountedVotes()
 	{
 		DeleteCriticalSection(&cs);

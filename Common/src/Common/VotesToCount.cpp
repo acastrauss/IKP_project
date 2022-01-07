@@ -10,8 +10,8 @@ namespace Common {
 	}
 
 	VotesToCount::VotesToCount(
-		std::deque<Common::Vote> votes,
-		std::vector<Common::VotingOption> options)
+		const std::deque<Common::Vote>& votes,
+		const std::vector<Common::VotingOption>& options)
 	{
 		Votes = votes;
 		Options = options;
@@ -28,13 +28,13 @@ namespace Common {
 		size_t bufferSize = 0;
 
 		// metadata
-		bufferSize += Votes.size();
-		bufferSize += Options.size();
+		bufferSize += sizeof(Votes.size());
+		bufferSize += sizeof(Options.size());
 
 		std::for_each(
 			Votes.begin(),
 			Votes.end(),
-			[&](const Common::Vote vote) {
+			[&](const Common::Vote& vote) {
 				bufferSize += sizeof(vote.BufferSize());
 				bufferSize += vote.BufferSize();
 			}
@@ -43,7 +43,7 @@ namespace Common {
 		std::for_each(
 			Options.begin(),
 			Options.end(),
-			[&](const Common::VotingOption option) {
+			[&](const Common::VotingOption& option) {
 				bufferSize += sizeof(option.BufferSize());
 				bufferSize += option.BufferSize();
 			}

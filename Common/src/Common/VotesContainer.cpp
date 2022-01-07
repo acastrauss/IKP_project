@@ -10,11 +10,18 @@ namespace Common {
 		InitializeCriticalSection(&cs);
 	}
 	
-	/*VotesContainer::VotesContainer(const VotesContainer& rhs)
+	VotesContainer::VotesContainer(const std::deque<Common::Vote> votes)
+	{
+		m_Votes = votes;
+		InitializeCriticalSection(&cs);
+	}
+
+	VotesContainer::VotesContainer(const VotesContainer& rhs)
 	{
 		m_Votes = rhs.m_Votes;
+		InitializeCriticalSection(&cs);
 	}
-	*/
+	
 
 	VotesContainer::~VotesContainer()
 	{

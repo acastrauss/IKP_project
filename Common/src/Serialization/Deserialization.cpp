@@ -92,3 +92,194 @@ Common::VotingOption Deserialize(char* buffer)
 
 	return votingOption;
 }
+
+template<>
+Common::VotingList Deserialize(char* buffer)
+{
+	ASSERT(buffer);
+
+	size_t offset = 0;
+
+	size_t numberOfOptions = *((size_t*)(buffer + offset));
+
+	offset += sizeof(numberOfOptions);
+
+	Common::VotingList votingList;
+
+	for (size_t i = 0; i < numberOfOptions; i++)
+	{
+		votingList.AddOption(
+			SubdataDeserialize<Common::VotingOption>(buffer, offset)
+		);
+	}
+
+	return votingList;
+}
+
+template<>
+Common::VotesToCount Deserialize(char* buffer)
+{
+	ASSERT(buffer);
+	size_t offset = 0;
+
+	size_t votesCount = *((size_t*)(buffer + offset));
+	offset += sizeof(votesCount);
+
+	size_t optionsCount = *((size_t*)(buffer + offset));
+	offset += sizeof(optionsCount);
+
+	std::deque<Common::Vote> votes = {};
+
+	for (size_t i = 0; i < votesCount; i++)
+	{
+		votes.push_back(
+			SubdataDeserialize<Common::Vote>(buffer, offset)
+		);
+	}
+
+	std::vector<Common::VotingOption> options = {};
+
+	for (size_t i = 0; i < optionsCount; i++)
+	{
+		options.push_back(
+			SubdataDeserialize<Common::VotingOption>(buffer, offset)
+		);
+	}
+
+	return Common::VotesToCount(
+		votes, options
+	);
+}
+
+// test
+template<>
+Common::CountedVotes Deserialize(char* buffer)
+{
+	ASSERT(buffer);
+	size_t offset = 0;
+
+	size_t votesCount = *((size_t*)(buffer + offset));
+	offset += sizeof(votesCount);
+
+	std::map<size_t, size_t> votes = {};
+
+	for (size_t i = 0; i < votesCount; i++)
+	{
+		size_t partyNumber = *((size_t*)(buffer + offset));
+		offset += sizeof(partyNumber);
+		size_t numberOfVotes = *((size_t*)(buffer + offset));
+		offset += sizeof(numberOfVotes);
+
+		votes.insert({
+			partyNumber, numberOfVotes
+		});
+	}
+
+	return Common::CountedVotes(votes);
+}
+
+//test
+template<>
+Common::VotesContainer Deserialize(char* buffer)
+{
+	ASSERT(buffer);
+	size_t offset = 0;
+
+	std::deque<Common::Vote> votes = {};
+
+	size_t votesCount = *((size_t*)(buffer + offset));
+	offset += sizeof(votesCount);
+
+	for (size_t i = 0; i < votesCount; i++)
+	{
+		votes.push_back(
+			SubdataDeserialize<Common::Vote>(buffer, offset)
+		);
+	}
+
+	return Common::VotesContainer(votes);
+}
+
+//test
+template<>
+Common::FinalResult Deserialize(char* buffer)
+{
+	ASSERT(buffer);
+	size_t offset = 0;
+
+	size_t resultCount = *((size_t*)(buffer + offset));
+	offset += sizeof(resultCount);
+
+	std::vector<std::pair<Common::VotingOption, size_t>> results = {};
+
+	for (size_t i = 0; i < resultCount; i++)
+	{
+		Common::VotingOption option = SubdataDeserialize<Common::VotingOption>(buffer, offset);
+		size_t votesNumber = *((size_t*)(buffer + offset));
+		offset += sizeof(votesNumber);
+
+		results.push_back({
+			option, votesNumber
+		});
+	}
+
+	return Common::FinalResult(results);
+}
+
+#pragma region SubdataDeserialization
+
+template<typename T>
+T SubdataDeserialize(char* buffer, size_t& offset)
+{
+	static_assert(false);
+}
+
+template<>
+Common::Vote SubdataDeserialize(char* buffer, size_t& offset)
+{
+	size_t voteBufferSize = *((size_t*)(buffer + offset));
+	offset += sizeof(voteBufferSize);
+
+	char* voteBuffer = new char[voteBufferSize];
+	ASSERT(voteBuffer);
+
+	memcpy(
+		voteBuffer,
+		buffer + offset,
+		voteBufferSize
+	);
+
+	Common::Vote vote = Deserialize<Common::Vote>(voteBuffer);
+
+	delete[] voteBuffer;
+
+	offset += voteBufferSize;
+
+	return vote;
+}
+
+template<>
+Common::VotingOption SubdataDeserialize(char* buffer, size_t& offset)
+{
+	size_t optionBufferSize = *((size_t*)(buffer + offset));
+	offset += sizeof(optionBufferSize);
+
+	char* optionBuffer = new char[optionBufferSize];
+	ASSERT(optionBuffer);
+
+	memcpy(
+		optionBuffer,
+		buffer + offset,
+		optionBufferSize
+	);
+
+	Common::VotingOption option = Deserialize<Common::VotingOption>(optionBuffer);
+
+	delete[] optionBuffer;
+
+	offset += optionBufferSize;
+
+	return option;
+}
+
+#pragma endregion

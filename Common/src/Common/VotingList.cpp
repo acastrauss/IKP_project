@@ -45,13 +45,14 @@ namespace Common {
 		size_t bufferSize = 0;
 
 		// meta data: number of options
-		bufferSize += m_Options.size();
+		bufferSize += sizeof(m_Options.size());
 
 		// each option buffer size
 		std::for_each(
 			m_Options.begin(),
 			m_Options.end(),
 			[&](const Common::VotingOption option) {
+				bufferSize += sizeof(option.BufferSize());
 				bufferSize += option.BufferSize();
 			}
 		);

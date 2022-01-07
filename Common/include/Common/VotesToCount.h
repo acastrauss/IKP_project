@@ -16,9 +16,10 @@ namespace Common {
 
 		VotesToCount();
 		explicit VotesToCount(
-			std::deque<Common::Vote> votes,
-			std::vector<Common::VotingOption> options
+			const std::deque<Common::Vote>& votes,
+			const std::vector<Common::VotingOption>& options
 		);
+
 		VotesToCount(
 			const VotesToCount& rhs
 		);

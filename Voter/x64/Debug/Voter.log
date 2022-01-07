@@ -1,1 +1,3 @@
-﻿  Voter.vcxproj -> D:\ikp_projekat\project\IKP_project\x64\Debug\Voter.exe
+﻿  Voter.cpp
+D:\ikp_projekat\project\IKP_project\Voter\Voter.cpp(99,78): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Voter.vcxproj -> D:\ikp_projekat\project\IKP_project\x64\Debug\Voter.exe

@@ -25,13 +25,13 @@ namespace Common {
 
 	public:
 		CountedVotes();
-		CountedVotes(
+		explicit CountedVotes(
 			std::map<size_t, size_t> votes
 		);
 
 		CountedVotes(
 			const CountedVotes& rhs
-		) = delete;
+		);
 
 		~CountedVotes();
 

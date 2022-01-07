@@ -33,7 +33,33 @@ int main()
         134
     );
     
-    char* messageToSend = Serialize(opt1);
+    Common::VotingOption opt2(
+        "Coa Cicvu",
+        "SNS",
+        1
+    );
+
+    Common::Vote vote1(
+        1, 1
+    );
+    
+    Common::Vote vote2(
+        1, 1
+    );
+
+    Common::VotingList votingList({
+        opt1, opt2
+    });
+    
+
+    Common::VotesToCount votesToCount(
+        {
+            vote1, vote2
+        },
+        {
+            opt1, opt2
+        }
+    );
 
     if (InitializeWindowsSockets() == false)
     {
@@ -66,9 +92,11 @@ int main()
         closesocket(connectSocket);
         WSACleanup();
     }
+    
+    char* messageToSend = Serialize(votesToCount);
 
     // Send an prepared message with null terminator included
-    iResult = send(connectSocket, messageToSend, opt1.BufferSize(), 0);
+    iResult = send(connectSocket, messageToSend, votesToCount.BufferSize(), 0);
     delete[] messageToSend;
 
     if (iResult == SOCKET_ERROR)

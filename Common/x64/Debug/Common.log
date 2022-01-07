@@ -1,2 +1,9 @@
-﻿  Deserialization.cpp
+﻿  CountedVotes.cpp
+  FinalResult.cpp
+  VotesToCount.cpp
+  VotingList.cpp
+  VotingOption.cpp
+  Deserialization.cpp
+  Serialization.cpp
+  Generating Code...
   Common.vcxproj -> D:\ikp_projekat\project\IKP_project\x64\Debug\Common.lib

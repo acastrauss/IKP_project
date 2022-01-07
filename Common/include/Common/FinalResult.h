@@ -15,9 +15,14 @@ namespace Common {
 		std::vector<std::pair<Common::VotingOption, size_t>> Results;
 
 		FinalResult();
-		FinalResult(
-			std::map<size_t, size_t> countedVotes,
-			std::vector<Common::VotingOption> allOptions
+
+		explicit FinalResult(
+			const std::vector<std::pair<Common::VotingOption, size_t>>& results
+		);
+
+		explicit FinalResult(
+			const std::map<size_t, size_t>& countedVotes,
+			const std::vector<Common::VotingOption>& allOptions
 		);
 
 		FinalResult(

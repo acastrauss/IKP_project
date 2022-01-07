@@ -112,11 +112,12 @@ char* Serialize(const Common::VotingList& obj)
 	
 	ASSERT(buffer);
 
-	size_t offset = 0;
-
+	
 	std::vector<Common::VotingOption> options = obj.GetOptions();
 
 	size_t optionsCount = options.size();
+	
+	size_t offset = 0;
 
 	memcpy(
 		buffer + offset,
@@ -124,12 +125,14 @@ char* Serialize(const Common::VotingList& obj)
 		sizeof(optionsCount)
 	);
 
+	size_t optN = *((size_t*)(buffer + offset));
+
 	offset += sizeof(optionsCount);
 
 	std::for_each(
 		options.begin(),
 		options.end(),
-		[&](const Common::VotingOption opt) {
+		[&](const Common::VotingOption& opt) {
 			AddSubdataToBuffer(buffer, opt, offset);
 		}
 	);
@@ -152,7 +155,7 @@ char* Serialize(const Common::VotesToCount& obj)
 		sizeof(votesSize)
 	);
 
-	offset += votesSize;
+	offset += sizeof(votesSize);
 
 	size_t optionsSize = obj.Options.size();
 
@@ -162,7 +165,7 @@ char* Serialize(const Common::VotesToCount& obj)
 		sizeof(optionsSize)
 	);
 
-	offset += optionsSize;
+	offset += sizeof(optionsSize);
 
 	std::for_each(
 		obj.Votes.begin(),
@@ -307,7 +310,7 @@ template<>
 void AddSubdataToBuffer(char* buffer, const Common::Vote& obj, size_t& offset)
 {
 	size_t voteBufferSize = obj.BufferSize();
-	char* voteBuffer = Serialize(obj);
+	
 
 	memcpy(
 		buffer + offset,
@@ -316,7 +319,9 @@ void AddSubdataToBuffer(char* buffer, const Common::Vote& obj, size_t& offset)
 	);
 
 	offset += sizeof(voteBufferSize);
-
+	
+	char* voteBuffer = Serialize(obj);
+	
 	memcpy(
 		buffer + offset,
 		voteBuffer,
@@ -332,15 +337,16 @@ template<>
 void AddSubdataToBuffer(char* buffer, const Common::VotingOption& obj, size_t& offset)
 {
 	size_t optionBufferSize = obj.BufferSize();
-	char* optionBuffer = Serialize(obj);
 
 	memcpy(
-		buffer,
+		buffer + offset,
 		&optionBufferSize,
 		sizeof(optionBufferSize)
 	);
 
 	offset += sizeof(optionBufferSize);
+	
+	char* optionBuffer = Serialize(obj);
 
 	memcpy(
 		buffer + offset,

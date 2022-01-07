@@ -12,7 +12,7 @@ namespace Common {
 		std::string PartyName;
 		size_t PartyNumber;
 		
-		VotingOption(
+		explicit VotingOption(
 			std::string PartyLeader,
 			std::string PartyName,
 			size_t PartyNumber

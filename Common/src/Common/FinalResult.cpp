@@ -11,8 +11,8 @@ namespace Common {
 	}
 
 	FinalResult::FinalResult(
-		std::map<size_t, size_t> countedVotes,
-		std::vector<Common::VotingOption> allOptions)
+		const std::map<size_t, size_t>& countedVotes,
+		const std::vector<Common::VotingOption>& allOptions)
 	{
 		for (auto it = countedVotes.begin(); it != countedVotes.end(); it++)
 		{
@@ -29,6 +29,12 @@ namespace Common {
 				*itOpt, it->second
 			});
 		}
+	}
+
+	FinalResult::FinalResult
+		(const std::vector<std::pair<Common::VotingOption, size_t>>& results)
+	{
+		Results = results;
 	}
 
 	FinalResult::FinalResult(const FinalResult& rhs)

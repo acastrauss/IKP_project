@@ -21,9 +21,13 @@ namespace Common {
 	public:
 		VotesContainer();
 
+		explicit VotesContainer(
+			const std::deque<Common::Vote> votes
+		);
+
 		VotesContainer(
 			const VotesContainer& rhs
-		) = delete;
+		);
 
 		~VotesContainer();
 

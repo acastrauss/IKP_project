@@ -26,5 +26,30 @@ Common::Vote Deserialize(char* buffer);
 template<>
 Common::VotingOption Deserialize(char* buffer);
 
+template<>
+Common::VotingList Deserialize(char* buffer);
 
+template<>
+Common::VotesToCount Deserialize(char* buffer);
 
+template<>
+Common::CountedVotes Deserialize(char* buffer);
+
+template<>
+Common::VotesContainer Deserialize(char* buffer);
+
+template<>
+Common::FinalResult Deserialize(char* buffer);
+
+#pragma region SubdataDeserialization
+
+template<typename T>
+T SubdataDeserialize(char* buffer, size_t& offset);
+
+template<>
+Common::Vote SubdataDeserialize(char* buffer, size_t& offset);
+
+template<>
+Common::VotingOption SubdataDeserialize(char* buffer, size_t& offset);
+
+#pragma endregion
