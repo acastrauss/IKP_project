@@ -27,7 +27,7 @@ int main()
     int iResult;
     // message to send
     
-    Common::VotingOption opt1(
+   /* Common::VotingOption opt1(
         "Pera peric",
         "qwerty",
         134
@@ -59,7 +59,42 @@ int main()
         {
             opt1, opt2
         }
+    );*/
+    std::map<size_t, size_t> countedVotes1 = { {1,100}, {2,500},{3,270} };
+
+    Common::CountedVotes countedVotes ( countedVotes1);
+    Common::VotingOption opt1(
+        "aca vucic",
+        "lopov",
+        1
+    ); Common::VotingOption opt2(
+        "dragan djilas",
+        "najposteniji",
+        2
+    ); Common::VotingOption opt3(
+        "Dragan Solak",
+        "takodje posten",
+        3
     );
+    Common::FinalResult finalres(
+        countedVotes1 ,
+        { opt1,
+        opt2,
+        opt3
+        }
+    );
+    
+    /*Common::Vote vote2(
+        2, 1
+    );
+    Common::Vote vote3(
+        3, 1
+    );
+    Common::VotesContainer votesContainer(
+        { vote1 ,
+        vote2,
+        vote3 }
+    );*/
 
     if (InitializeWindowsSockets() == false)
     {
@@ -93,10 +128,10 @@ int main()
         WSACleanup();
     }
     
-    char* messageToSend = Serialize(votesToCount);
-
+    char* messageToSend = Serialize(finalres);
+    std::cout << finalres.BufferSize() << std::endl ;
     // Send an prepared message with null terminator included
-    iResult = send(connectSocket, messageToSend, votesToCount.BufferSize(), 0);
+    iResult = send(connectSocket, messageToSend, finalres.BufferSize(), 0);
     delete[] messageToSend;
 
     if (iResult == SOCKET_ERROR)

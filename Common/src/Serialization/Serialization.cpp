@@ -210,7 +210,7 @@ char* Serialize(const Common::CountedVotes& obj)
 		[&](std::pair<size_t, size_t> votesCount) {
 
 			memcpy(
-				buffer,
+				buffer+offset,
 				&votesCount.first,
 				sizeof(votesCount.first)
 			);
@@ -218,7 +218,7 @@ char* Serialize(const Common::CountedVotes& obj)
 			offset += sizeof(votesCount.first);
 
 			memcpy(
-				buffer,
+				buffer+offset,
 				&votesCount.second,
 				sizeof(votesCount.second)
 			);
@@ -285,7 +285,7 @@ char* Serialize(const Common::FinalResult& obj)
 			AddSubdataToBuffer(buffer, result.first, offset);
 
 			memcpy(
-				buffer,
+				buffer+offset,
 				&result.second,
 				sizeof(result.second)
 			);

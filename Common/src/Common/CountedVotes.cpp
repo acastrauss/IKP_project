@@ -66,7 +66,7 @@ namespace Common {
 		/// Because m_Votes consist of size_t key-value pairs
 		/// </summary>
 		/// <returns></returns>
-		return m_Votes.size() * sizeof(size_t) * 2;
+		return m_Votes.size() * sizeof(size_t) * 2 + sizeof(size_t);
 	}
 
 	std::map<size_t, size_t> Common::CountedVotes::GetCountedVotes() const

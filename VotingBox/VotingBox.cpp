@@ -109,7 +109,8 @@ int main()
             iResult = recv(acceptedSocket, recvBuff, defaultBufferLength, 0);
             if (iResult > 0)
             {
-                Common::VotesToCount myopt = Deserialize<Common::VotesToCount>(recvBuff);
+                Common::FinalResult myopt = Deserialize<Common::FinalResult>(recvBuff);
+                int ss = 6;
                 int a = 5;
             }
             else if (iResult == 0)

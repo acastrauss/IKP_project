@@ -33,7 +33,7 @@ namespace Common {
 		EnterCriticalSection((LPCRITICAL_SECTION)&cs);
 
 		size_t bufferSize = 0;
-		bufferSize += m_Votes.size();
+		bufferSize += sizeof(m_Votes.size());
 
 		std::for_each(
 			m_Votes.begin(),

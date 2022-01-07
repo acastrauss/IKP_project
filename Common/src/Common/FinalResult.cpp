@@ -46,7 +46,7 @@ namespace Common {
 	{
 		size_t bufferSize = 0;
 
-		bufferSize += Results.size();
+		bufferSize += sizeof(Results.size());
 
 		std::for_each(
 			Results.begin(),
