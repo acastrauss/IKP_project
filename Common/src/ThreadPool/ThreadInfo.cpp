@@ -1,4 +1,6 @@
 #include "ThreadPool/ThreadInfo.h"
+#include "pch.h"
+#include "ThreadPool/ThreadInfo.h"
 
 namespace Common {
 	Common::ThreadInfo::ThreadInfo()

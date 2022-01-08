@@ -57,6 +57,12 @@
     <ClInclude Include="include\Serialization\Deserialization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ThreadPool\ThreadPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ThreadPool\ThreadInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -99,6 +105,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Serialization\Deserialization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThreadPool\ThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThreadPool\ThreadInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

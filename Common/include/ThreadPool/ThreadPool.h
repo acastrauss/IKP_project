@@ -16,8 +16,6 @@ namespace Common {
 		HANDLE semaphoreHandle;
 	public:
 
-		ThreadPool() = delete;
-
 		explicit ThreadPool(
 			DWORD(WINAPI* f)(LPVOID lpParam),
 			LPVOID lpParam,
@@ -25,6 +23,8 @@ namespace Common {
 		);
 
 		~ThreadPool();
+
+		ThreadPool() = delete;
 
 		ThreadPool(
 			const ThreadPool& rhs
