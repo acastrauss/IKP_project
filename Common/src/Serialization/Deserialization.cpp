@@ -151,7 +151,6 @@ Common::VotesToCount Deserialize(char* buffer)
 	);
 }
 
-// test - sredjeno
 template<>
 Common::CountedVotes Deserialize(char* buffer)
 {
@@ -178,7 +177,6 @@ Common::CountedVotes Deserialize(char* buffer)
 	return Common::CountedVotes(votes);
 }
 
-//test
 template<>
 Common::VotesContainer Deserialize(char* buffer)
 {
@@ -200,7 +198,6 @@ Common::VotesContainer Deserialize(char* buffer)
 	return Common::VotesContainer(votes);
 }
 
-//test
 template<>
 Common::FinalResult Deserialize(char* buffer)
 {
