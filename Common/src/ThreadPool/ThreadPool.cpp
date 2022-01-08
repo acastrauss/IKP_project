@@ -58,7 +58,7 @@ namespace Common {
 	ThreadInfo Common::ThreadPool::GetThreadBlocking()
 	{
 		if (
-			m_TakenThreads == m_Threads.size()
+			m_TakenThreads == (USHORT)m_Threads.size()
 			) {
 			WaitForSingleObject(
 				semaphoreHandle, INFINITE
