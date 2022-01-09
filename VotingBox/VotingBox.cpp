@@ -34,7 +34,7 @@ int main()
     SOCKET acceptedSocket = INVALID_SOCKET;
 
     InitializeConfig();
-
+    InitializeVotingOptions();
     int iResult = 0;
     char recvBuff[defaultBufferLength];
 
@@ -228,6 +228,51 @@ void InitializeConfig()
 
 void InitializeVotingOptions()
 {
+   
+    std::wstring configPath = CurrentDirectoryPath() + L"\\votingOptions.csv";
+
+    std::ifstream file;
+
+    file.open(
+        configPath
+    );
+
+    std::string line;
+
+    Common::VotingList votingList;
+
+    std::int16_t brojac = 1;
+    std::string partyLeader;
+    std::string partyName;
+
+    Common::VotingOption vOption;
+
+    while (std::getline(file, line))
+    {
+        if (brojac % 4 != 0) {
+
+            std::vector<std::string> splitted = SplitString(line, ',');
+            TrimString(splitted[1]);
+
+            if (brojac % 4 == 1) {
+                partyName = splitted[1];
+            }
+            else
+                if (brojac % 4 == 2) {
+                    partyLeader = splitted[1];
+                }
+                else
+                    if (brojac % 4 == 3) {
+                        size_t optNum = stol(splitted[1], nullptr, 10);
+                        vOption = Common::VotingOption(partyLeader, partyName, optNum);
+                        votingList.AddOption(vOption);
+                    }
+        }
+        brojac++;
+    }
+
+    file.close();
+
 }
 
 bool InitWindowsSockets()
