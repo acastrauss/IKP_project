@@ -13,7 +13,8 @@ namespace Common {
 		std::vector<ThreadInfo> m_Threads;
 		unsigned short m_TakenThreads = 0;
 
-		HANDLE semaphoreHandle;
+		CONDITION_VARIABLE cvThreads;
+		CRITICAL_SECTION csThreads;
 	public:
 
 		explicit ThreadPool(

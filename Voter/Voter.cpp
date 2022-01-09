@@ -19,7 +19,6 @@
 
 bool InitializeWindowsSockets();
 
-
 int main()
 {
     SOCKET connectSocket = INVALID_SOCKET;
@@ -27,75 +26,6 @@ int main()
     int iResult;
     // message to send
     
-   /* Common::VotingOption opt1(
-        "Pera peric",
-        "qwerty",
-        134
-    );
-    
-    Common::VotingOption opt2(
-        "Coa Cicvu",
-        "SNS",
-        1
-    );
-
-    Common::Vote vote1(
-        1, 1
-    );
-    
-    Common::Vote vote2(
-        1, 1
-    );
-
-    Common::VotingList votingList({
-        opt1, opt2
-    });
-    
-
-    Common::VotesToCount votesToCount(
-        {
-            vote1, vote2
-        },
-        {
-            opt1, opt2
-        }
-    );*/
-    std::map<size_t, size_t> countedVotes1 = { {1,100}, {2,500},{3,270} };
-
-    Common::CountedVotes countedVotes ( countedVotes1);
-    Common::VotingOption opt1(
-        "aca vucic",
-        "lopov",
-        1
-    ); Common::VotingOption opt2(
-        "dragan djilas",
-        "najposteniji",
-        2
-    ); Common::VotingOption opt3(
-        "Dragan Solak",
-        "takodje posten",
-        3
-    );
-    Common::FinalResult finalres(
-        countedVotes1 ,
-        { opt1,
-        opt2,
-        opt3
-        }
-    );
-    
-    /*Common::Vote vote2(
-        2, 1
-    );
-    Common::Vote vote3(
-        3, 1
-    );
-    Common::VotesContainer votesContainer(
-        { vote1 ,
-        vote2,
-        vote3 }
-    );*/
-
     if (InitializeWindowsSockets() == false)
     {
         // we won't log anything since it will be logged

@@ -10,6 +10,7 @@
 #include <Common/VotingList.h>
 #include <Common/VotingOption.h>
 #include <Serialization/Deserialization.h>
+#include <ThreadPool/ThreadPool.h>
 
 #include <vector>
 

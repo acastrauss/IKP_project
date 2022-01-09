@@ -20,10 +20,9 @@ namespace Common {
 		}
 
 		m_TakenThreads = 0;
-	
-		semaphoreHandle = CreateSemaphore(
-			NULL, 1, 1, NULL
-		);
+		
+		InitializeConditionVariable(&cvThreads);
+		InitializeCriticalSection(&csThreads);
 	}
 
 	Common::ThreadPool::~ThreadPool()
@@ -33,7 +32,7 @@ namespace Common {
 			SAFE_DELETE_HANDLE(m_Threads[i].Handle);
 		}
 
-		SAFE_DELETE_HANDLE(semaphoreHandle);
+		DeleteCriticalSection(&csThreads);
 	}
 
 	ThreadInfo Common::ThreadPool::GetThreadNonBlocking()
@@ -60,18 +59,21 @@ namespace Common {
 		if (
 			m_TakenThreads == (USHORT)m_Threads.size()
 			) {
-			WaitForSingleObject(
-				semaphoreHandle, INFINITE
+			SleepConditionVariableCS(
+				&cvThreads, &csThreads, INFINITE
 			);
 		}
 
 		Common::ThreadInfo tInfo;
 
+		
+
 		for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
 		{
 			if (!m_Threads[i].Taken) {
-				tInfo = m_Threads[i];
+				m_Threads[i].Taken = true;
 				m_TakenThreads++;
+				tInfo = m_Threads[i];
 			}
 		}
 
@@ -85,10 +87,8 @@ namespace Common {
 			if (m_Threads[i].Id == threadInfo.Id) {
 				m_Threads[i].Taken = false;
 				m_TakenThreads--;
-			
-				ReleaseSemaphore(
-					semaphoreHandle, 1, NULL
-				);
+				
+				WakeConditionVariable(&cvThreads);
 			}
 		}
 	}
