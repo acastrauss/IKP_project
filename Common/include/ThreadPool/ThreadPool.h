@@ -6,7 +6,6 @@
 
 namespace Common {
 	
-
 	class ThreadPool
 	{
 	private:
@@ -53,7 +52,7 @@ namespace Common {
 		/// </returns>
 		ThreadInfo GetThreadBlocking();
 
-		void ReturnThreadToPool(const ThreadInfo& threadInfo);
+		void ReturnThreadToPool(DWORD tId);
 	};
 }
 

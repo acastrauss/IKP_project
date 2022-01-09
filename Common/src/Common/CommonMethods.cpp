@@ -37,21 +37,21 @@ std::vector<std::string> SplitString(std::string str, char delimiter)
 	return result;
 }
 
-inline void LTrimString(std::string& str)
+void LTrimString(std::string& str)
 {
 	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch) {
 		return !std::isspace(ch);
 		}));
 }
 
-inline void RTrimString(std::string& str)
+void RTrimString(std::string& str)
 {
 	str.erase(std::find_if(str.rbegin(), str.rend(), [](unsigned char ch) {
 		return !std::isspace(ch);
 		}).base(), str.end());
 }
 
-inline void TrimString(std::string& str)
+void TrimString(std::string& str)
 {
 	[&](std::string& str) {
 		LTrimString(str);
@@ -62,4 +62,12 @@ inline void TrimString(std::string& str)
 inline bool IsWhiteSpace(std::string str)
 {
 	return std::all_of(str.begin(), str.end(), std::isspace);
+}
+
+std::wstring CurrentDirectoryPath()
+{
+	TCHAR buffer[MAX_PATH] = { 0 };
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+	return std::wstring(buffer).substr(0, pos);
 }

@@ -2,6 +2,17 @@
 #include "ThreadPool/ThreadPool.h"
 #include <Common/CommonMethods.h>
 
+/// <summary>
+/// [
+/// threadInfo1, true
+/// threadInfo2, true
+/// threadInfo3, true
+/// threadInfo4, true
+/// ...
+/// threadInfoN, true
+/// ]
+/// </summary>
+
 namespace Common {
 	Common::ThreadPool::ThreadPool
 		(DWORD(__stdcall* f)(LPVOID lpParam), LPVOID lpParam, USHORT poolSize)
@@ -56,7 +67,7 @@ namespace Common {
 
 	ThreadInfo Common::ThreadPool::GetThreadBlocking()
 	{
-		if (
+		while (
 			m_TakenThreads == (USHORT)m_Threads.size()
 			) {
 			SleepConditionVariableCS(
@@ -65,8 +76,6 @@ namespace Common {
 		}
 
 		Common::ThreadInfo tInfo;
-
-		
 
 		for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
 		{
@@ -80,11 +89,11 @@ namespace Common {
 		return tInfo;
 	}
 
-	void Common::ThreadPool::ReturnThreadToPool(const ThreadInfo& threadInfo)
+	void Common::ThreadPool::ReturnThreadToPool(DWORD tId)
 	{
 		for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
 		{
-			if (m_Threads[i].Id == threadInfo.Id) {
+			if (m_Threads[i].Id == tId) {
 				m_Threads[i].Taken = false;
 				m_TakenThreads--;
 				

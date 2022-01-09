@@ -7,20 +7,27 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <vector>
+#include <fstream>
 
 #include <Common/Config.h>
 #include <Common/Vote.h>
 #include <Common/VotingList.h>
 #include <Common/VotingOption.h>
 #include <Serialization/Serialization.h>
-#include <vector>
+#include <Common/CommonMethods.h>
 
 #pragma comment(lib, "Ws2_32.lib")
+
+UINT numberOfVoters;
+
+void InitializeConfig();
 
 bool InitializeWindowsSockets();
 
 int main()
 {
+    InitializeConfig();
     SOCKET connectSocket = INVALID_SOCKET;
     // variable used to store function return value
     int iResult;
@@ -58,10 +65,9 @@ int main()
         WSACleanup();
     }
     
-    char* messageToSend = Serialize(finalres);
-    std::cout << finalres.BufferSize() << std::endl ;
+    const char* messageToSend = "asdasdasdasd";
     // Send an prepared message with null terminator included
-    iResult = send(connectSocket, messageToSend, finalres.BufferSize(), 0);
+    iResult = send(connectSocket, messageToSend, defaultBufferLength, 0);
     delete[] messageToSend;
 
     if (iResult == SOCKET_ERROR)
@@ -80,6 +86,52 @@ int main()
 
 
     return 0;
+}
+
+void InitializeConfig()
+{
+    const std::string configNames[] = {
+        "NUMBER OF VOTERS"
+    };
+
+    std::wstring configPath = CurrentDirectoryPath() + L"\\voterConfig.csv";
+
+    std::ifstream file;
+
+    file.open(
+        configPath
+    );
+
+    std::map<std::string, std::string> configValues = {};
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        std::vector<std::string> splitted = SplitString(line, ',');
+        
+        ASSERT(splitted.size() == 2);
+        
+        TrimString(splitted[0]);
+        TrimString(splitted[1]);
+
+        configValues.insert({
+            splitted[0], splitted[1]
+        });
+    }
+
+    file.close();
+    
+    try
+    {
+        numberOfVoters = std::stoi(
+            configValues[configNames[0]]
+        );
+    }
+    catch (const std::exception&)
+    {
+        std::cout << "Config file doesn't contain key." << std::endl;
+        exit(1);
+    }
 }
 
 bool InitializeWindowsSockets()

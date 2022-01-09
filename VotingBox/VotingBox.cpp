@@ -4,6 +4,10 @@
 #include <iostream>
 #include <string>
 #include <ws2tcpip.h>
+#include <vector>
+#include <fstream>
+#include <ctime>
+#include <iomanip>
 
 #include <Common/Config.h>
 #include <Common/Vote.h>
@@ -12,16 +16,24 @@
 #include <Serialization/Deserialization.h>
 #include <ThreadPool/ThreadPool.h>
 
-#include <vector>
+#include <Common/CommonMethods.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
+UINT numberOfVotingCounters;
+std::time_t electionsEnd;
+std::vector<Common::VotingList> votingList;
+
 bool InitWindowsSockets();
+void InitializeConfig();
+void InitializeVotingOptions();
 
 int main()
 {
     SOCKET listenSocket = INVALID_SOCKET;
     SOCKET acceptedSocket = INVALID_SOCKET;
+
+    InitializeConfig();
 
     int iResult = 0;
     char recvBuff[defaultBufferLength];
@@ -148,6 +160,74 @@ int main()
     WSACleanup();
 
     return 0;
+}
+
+#pragma warning(disable:4996)
+
+void InitializeConfig()
+{
+    const std::string configNames[] = {
+        "NUMBER OF VOTE COUNTERS",
+        "ELECTIONS END"
+    };
+
+    std::wstring configPath = CurrentDirectoryPath() + L"\\votingBoxConfig.csv";
+
+    std::ifstream file;
+
+    file.open(
+        configPath
+    );
+
+    std::map<std::string, std::string> configValues = {};
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        std::vector<std::string> splitted = SplitString(line, ',');
+
+        ASSERT(splitted.size() == 2);
+
+        TrimString(splitted[0]);
+        TrimString(splitted[1]);
+
+        configValues.insert({
+            splitted[0], splitted[1]
+            });
+    }
+
+    file.close();
+
+    try
+    {
+        numberOfVotingCounters = std::stoi(
+            configValues[configNames[0]]
+        );
+
+        std::tm* elDt;
+        time(&electionsEnd);
+        elDt = localtime(&electionsEnd);
+
+        strftime(
+            (char*)configValues[configNames[1]].c_str(),
+            configValues[configNames[1]].size(),
+            "%d-%m-%Y %r",
+            elDt
+        );
+
+        auto aaaa = asctime(elDt);
+
+        electionsEnd = std::mktime(elDt);
+    }
+    catch (const std::exception&)
+    {
+        std::cout << "Config file doesn't contain key." << std::endl;
+        exit(1);
+    }
+}
+
+void InitializeVotingOptions()
+{
 }
 
 bool InitWindowsSockets()

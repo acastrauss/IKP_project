@@ -6,6 +6,7 @@
 #ifndef ASSERT
 #define ASSERT(x) if(!(x)) __debugbreak()
 #endif // !ASSERT
+#include <string>
 
 #ifndef SAFE_DELETE_HANDLE
 #define SAFE_DELETE_HANDLE(x) if(x) CloseHandle(x)
@@ -32,7 +33,9 @@ std::vector<std::string> SplitString(
 	std::string str, char delimiter
 );
 
-inline void LTrimString(std::string & str);
-inline void RTrimString(std::string & str);
-inline void TrimString(std::string & str);
+void LTrimString(std::string & str);
+void RTrimString(std::string & str);
+void TrimString(std::string & str);
 inline bool IsWhiteSpace(std::string str);
+
+std::wstring CurrentDirectoryPath();
