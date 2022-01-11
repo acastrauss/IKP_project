@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VotingBox", "VotingBox\Voti
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Voter", "Voter\Voter.vcxproj", "{6A5F7DB7-D2DD-4987-9B63-5D0510B9C91C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VoteCounter", "VoteCounter\VoteCounter.vcxproj", "{995B6D36-3822-47D1-8E33-D3C8F57D7223}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{6A5F7DB7-D2DD-4987-9B63-5D0510B9C91C}.Release|x64.Build.0 = Release|x64
 		{6A5F7DB7-D2DD-4987-9B63-5D0510B9C91C}.Release|x86.ActiveCfg = Release|Win32
 		{6A5F7DB7-D2DD-4987-9B63-5D0510B9C91C}.Release|x86.Build.0 = Release|Win32
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Debug|x64.ActiveCfg = Debug|x64
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Debug|x64.Build.0 = Debug|x64
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Debug|x86.ActiveCfg = Debug|Win32
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Debug|x86.Build.0 = Debug|Win32
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x64.ActiveCfg = Release|x64
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x64.Build.0 = Release|x64
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x86.ActiveCfg = Release|Win32
+		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
