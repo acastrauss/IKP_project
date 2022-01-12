@@ -2,29 +2,23 @@
 #include "ThreadPool/ThreadPool.h"
 #include <Common/CommonMethods.h>
 
-/// <summary>
-/// [
-/// threadInfo1, true
-/// threadInfo2, true
-/// threadInfo3, true
-/// threadInfo4, true
-/// ...
-/// threadInfoN, true
-/// ]
-/// </summary>
-
 namespace Common {
 	Common::ThreadPool::ThreadPool
-		(DWORD(__stdcall* f)(LPVOID lpParam), LPVOID lpParam, USHORT poolSize)
+		(DWORD(__stdcall* f)(LPVOID lpParam), std::vector<LPVOID> lpParams, USHORT poolSize)
 	{
+		ASSERT(lpParams.size() == (size_t)poolSize);
+
 		for (USHORT i = 0; i < poolSize; i++)
 		{
 			Common::ThreadInfo tInfo;
 
 			tInfo.Handle = CreateThread(
-				NULL, 0, f, lpParam, CREATE_SUSPENDED, &tInfo.Id
+				NULL, 0, f, lpParams[i], CREATE_SUSPENDED, &tInfo.Id
 			);
 		
+			tInfo.Parameter = lpParams[i];
+			tInfo.Taken = false;
+
 			ASSERT(tInfo.Handle);
 
 			m_Threads.push_back(tInfo);
@@ -48,8 +42,12 @@ namespace Common {
 
 	ThreadInfo Common::ThreadPool::GetThreadNonBlocking()
 	{
+		Common::ThreadInfo tInfo;
+
+		EnterCriticalSection(&csThreads);
+
 		if (m_TakenThreads == (USHORT)m_Threads.size()) {
-			return ThreadInfo();
+			tInfo = ThreadInfo();
 		}
 		else {
 			for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
@@ -57,12 +55,15 @@ namespace Common {
 				if (!m_Threads[i].Taken) {
 					m_Threads[i].Taken = true;
 					m_TakenThreads++;
-					return m_Threads[i];
+					tInfo = m_Threads[i];
+					break;
 				}
 			}
-
-			return ThreadInfo();
 		}
+
+		LeaveCriticalSection(&csThreads);
+
+		return tInfo;
 	}
 
 	ThreadInfo Common::ThreadPool::GetThreadBlocking()
@@ -75,6 +76,8 @@ namespace Common {
 			);
 		}
 
+		EnterCriticalSection(&csThreads);
+
 		Common::ThreadInfo tInfo;
 
 		for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
@@ -85,20 +88,25 @@ namespace Common {
 				tInfo = m_Threads[i];
 			}
 		}
+		LeaveCriticalSection(&csThreads);
 
 		return tInfo;
 	}
 
 	void Common::ThreadPool::ReturnThreadToPool(DWORD tId)
 	{
+		EnterCriticalSection(&csThreads);
+
 		for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
 		{
 			if (m_Threads[i].Id == tId) {
 				m_Threads[i].Taken = false;
 				m_TakenThreads--;
-				
 				WakeConditionVariable(&cvThreads);
+				break;
 			}
 		}
+
+		LeaveCriticalSection(&csThreads);
 	}
 }

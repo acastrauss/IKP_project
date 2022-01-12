@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Voter", "Voter\Voter.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VoteCounter", "VoteCounter\VoteCounter.vcxproj", "{995B6D36-3822-47D1-8E33-D3C8F57D7223}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InformationService", "InformationService\InformationService.vcxproj", "{4087CE2C-1286-424C-A37E-81773DC18C9A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x64.Build.0 = Release|x64
 		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x86.ActiveCfg = Release|Win32
 		{995B6D36-3822-47D1-8E33-D3C8F57D7223}.Release|x86.Build.0 = Release|Win32
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Debug|x64.ActiveCfg = Debug|x64
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Debug|x64.Build.0 = Debug|x64
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Debug|x86.ActiveCfg = Debug|Win32
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Debug|x86.Build.0 = Debug|Win32
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Release|x64.ActiveCfg = Release|x64
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Release|x64.Build.0 = Release|x64
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Release|x86.ActiveCfg = Release|Win32
+		{4087CE2C-1286-424C-A37E-81773DC18C9A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

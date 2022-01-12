@@ -3,7 +3,6 @@
 #include "ThreadPool/ThreadInfo.h"
 #include <vector>
 
-
 namespace Common {
 	
 	class ThreadPool
@@ -15,10 +14,15 @@ namespace Common {
 		CONDITION_VARIABLE cvThreads;
 		CRITICAL_SECTION csThreads;
 	public:
-
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="f">:Function for threads</param>
+		/// <param name="lpParams">:Vector of parameters for each thread (size must be equal to pool size)</param>
+		/// <param name="poolSize"></param>
 		explicit ThreadPool(
 			DWORD(WINAPI* f)(LPVOID lpParam),
-			LPVOID lpParam,
+			std::vector<LPVOID> lpParams,
 			USHORT poolSize
 		);
 
@@ -35,7 +39,6 @@ namespace Common {
 		) = delete;
 
 		/// <summary>
-		/// 
 		/// </summary>
 		/// <returns>
 		/// Returns: ThreadInfo with Taken=true if there is available thread,
@@ -44,7 +47,6 @@ namespace Common {
 		ThreadInfo GetThreadNonBlocking();
 		
 		/// <summary>
-		/// 
 		/// </summary>
 		/// <returns>
 		/// Returns: handle for thread if there is one available,

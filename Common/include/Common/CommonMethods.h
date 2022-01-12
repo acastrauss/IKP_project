@@ -2,11 +2,11 @@
 #include <vector>
 #include <string>
 #include <Windows.h>
+#include <string>
 
 #ifndef ASSERT
 #define ASSERT(x) if(!(x)) __debugbreak()
 #endif // !ASSERT
-#include <string>
 
 #ifndef SAFE_DELETE_HANDLE
 #define SAFE_DELETE_HANDLE(x) if(x) CloseHandle(x)

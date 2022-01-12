@@ -57,7 +57,7 @@ char* Serialize(const Common::VotingOption& obj)
 	ASSERT(buffer);
 
 	size_t offset = 0;
-
+	
 	size_t partyLeaderSize = obj.PartyLeader.size();
 
 	memcpy(
@@ -111,14 +111,13 @@ char* Serialize(const Common::VotingList& obj)
 	char* buffer = new char[bufferSize];
 	
 	ASSERT(buffer);
-
 	
 	std::vector<Common::VotingOption> options = obj.GetOptions();
 
 	size_t optionsCount = options.size();
 	
 	size_t offset = 0;
-
+	
 	memcpy(
 		buffer + offset,
 		&optionsCount,

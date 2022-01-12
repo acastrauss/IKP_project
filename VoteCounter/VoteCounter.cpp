@@ -11,11 +11,20 @@
 #include <Common/VotingList.h>
 #include <Common/VotingOption.h>
 #include <Serialization/Deserialization.h>
+#include <Serialization/Serialization.h>
 #include <ThreadPool/ThreadPool.h>
 
 #include <Common/CommonMethods.h>
 
 #pragma comment(lib, "Ws2_32.lib")
+
+
+
+int usedThreads = 0;
+ULONG voterId = 0;
+
+CRITICAL_SECTION cs;
+CONDITION_VARIABLE cv;
 struct ThreadCountVotes {
     std::deque<Common::Vote> Votes;
     Common::CountedVotes* Counted;
@@ -38,9 +47,43 @@ struct ThreadCountVotes {
     }
 };
 
+
 DWORD WINAPI Sum(LPVOID lpParam) {
 
-    ThreadCountVotes* countVotes = ((ThreadCountVotes*)lpParam);
+
+    sockaddr_in serverAddress = *((sockaddr_in*)lpParam);
+
+    // create a socket
+    SOCKET connectSocket = socket(AF_INET,
+        SOCK_STREAM,
+        IPPROTO_TCP);
+
+    if (connectSocket == INVALID_SOCKET)
+    {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        //WSACleanup();
+        return 1;
+    }
+
+    // connect to server specified in serverAddress and socket connectSocket
+    if (connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
+    {
+        printf("Unable to connect to server.\n");
+
+        std::cout << WSAGetLastError() << std::endl;
+        closesocket(connectSocket);
+        //WSACleanup();
+    }
+
+    char buffer[defaultBufferLength];
+
+    // Send an prepared message with null terminator included
+    int iResult = recv(connectSocket, buffer, defaultBufferLength, 0);
+
+    Common::VotesToCount votesToCount= Deserialize<Common::VotesToCount>(buffer);
+
+    ThreadCountVotes* countVotes ; // ovo treba inicijalizovati
+    countVotes->Votes = votesToCount.Votes;
 
     for (size_t i = 0; i < countVotes->Votes.size(); i++)
     {
@@ -48,7 +91,36 @@ DWORD WINAPI Sum(LPVOID lpParam) {
             countVotes->Votes[i].PartyNumber
         );
     }
+    Common::CountedVotes countedV(*countVotes->Counted);
+    char* voteMsg = Serialize(countedV);
 
+    iResult = send(
+        connectSocket,
+        voteMsg,
+        (int)countedV.BufferSize(),
+        0
+    );
+
+    delete[] voteMsg;
+
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("send failed with error: %d\n", WSAGetLastError());
+        closesocket(connectSocket);
+        //WSACleanup();
+        return 1;
+    }
+
+    printf("Bytes Sent: %ld\n", iResult);
+    shutdown(connectSocket, SD_BOTH);
+    closesocket(connectSocket);
+
+    Sleep(500);
+
+    usedThreads--;
+    WakeAllConditionVariable(&cv);
+
+    
     return 0;
 }
 
@@ -146,3 +218,6 @@ int main()
 
     return 0;
 }
+
+
+

@@ -8,12 +8,14 @@ namespace Common {
 		Handle = NULL;
 		Id = -1;
 		Taken = false;
+		Parameter = NULL;
 	}
 
-	Common::ThreadInfo::ThreadInfo(HANDLE handle, DWORD id, bool taken)
+	Common::ThreadInfo::ThreadInfo(HANDLE handle, DWORD id, LPVOID parameter, bool taken)
 	{
 		Handle = handle;
 		Id = id;
+		Parameter = parameter;
 		Taken = taken;
 	}
 
@@ -21,6 +23,7 @@ namespace Common {
 	{
 		Handle = rhs.Handle;
 		Id = rhs.Id;
+		Parameter = rhs.Parameter;
 		Taken = rhs.Taken;
 	}
 
@@ -28,6 +31,7 @@ namespace Common {
 	{
 		Handle = rhs.Handle;
 		Id = rhs.Id;
+		Parameter = rhs.Parameter;
 		Taken = rhs.Taken;
 		return *this;
 	}

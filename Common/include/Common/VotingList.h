@@ -33,7 +33,6 @@ namespace Common {
 
 		size_t BufferSize() const;
 
-
 		void SortOptions();
 
 		std::vector<VotingOption> GetOptions() const;

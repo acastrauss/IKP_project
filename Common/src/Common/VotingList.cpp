@@ -27,8 +27,9 @@ namespace Common {
 
 	void VotingList::AddOption(const VotingOption& option)
 	{
-		ASSERT(this->FindOption(option.PartyNumber) == m_Options.end());
-		m_Options.push_back(option);
+		if (this->FindOption(option.PartyNumber) == m_Options.end()) {
+			m_Options.push_back(option);
+		}
 	}
 
 	vvocit VotingList::FindOption(size_t optionNumber) const
