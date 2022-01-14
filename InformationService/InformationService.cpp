@@ -50,7 +50,7 @@ int main()
     hints.ai_flags = AI_PASSIVE;     // 
 
     // Resolve the server address and port
-    iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &resultingAddress);
+    iResult = getaddrinfo(NULL, std::to_string(informationServicePort).c_str(), &hints, &resultingAddress);
     if (iResult != 0)
     {
         printf("getaddrinfo failed with error: %d\n", iResult);
@@ -96,81 +96,70 @@ int main()
         return 1;
     }
 
-    printf("Server initialized, waiting for clients.\n");
+    printf("Final server initialized.\n");
+    // Wait for clients and accept client connections.
+    // Returning value is acceptedSocket used for further
+    // Client<->Server communication. This version of
+    // server will handle only one client.
+    acceptedSocket = accept(listenSocket, NULL, NULL);
 
-    do
+    if (acceptedSocket == INVALID_SOCKET)
     {
-        // Wait for clients and accept client connections.
-        // Returning value is acceptedSocket used for further
-        // Client<->Server communication. This version of
-        // server will handle only one client.
-        acceptedSocket = accept(listenSocket, NULL, NULL);
+        printf("accept failed with error: %d\n", WSAGetLastError());
+        closesocket(listenSocket);
+        WSACleanup();
+        return 1;
+    }
 
-        if (acceptedSocket == INVALID_SOCKET)
-        {
-            printf("accept failed with error: %d\n", WSAGetLastError());
-            closesocket(listenSocket);
-            WSACleanup();
-            return 1;
-        }
-
-        do
-        {
-            // Receive data until the client shuts down the connection
-            iResult = recv(acceptedSocket, recvbuf, defaultBufferLength, 0);
-            if (iResult > 0)
-            {
-               // printf("Message received from voting box: %s.\n", recvbuf);
+    // Receive data until the client shuts down the connection
+    iResult = recv(acceptedSocket, recvbuf, defaultBufferLength, 0);
+    if (iResult > 0)
+    {
+        // printf("Message received from voting box: %s.\n", recvbuf);
                 
-                Common::FinalResult results = Deserialize<Common::FinalResult>(recvbuf);
-                Common::FinalResult sortedResults;
-                int countsNumber = 0;
-                for (size_t o = 0; o < results.Results.size(); o++)
-                {
-                    countsNumber += results.Results[o].second;
-                }
-                std::sort(
-                    results.Results.begin(),
-                    results.Results.end(),
-                    [](const auto& pair1, const auto& pair2) {
-                        return pair1.second > pair2.second;
-                    }
-                );
-                std::cout << "Elections results : " << std::endl; 
-                std::cout << "----------------------------------------------------------------------" << std::endl;
-                for (size_t i = 0; i < results.Results.size() ; i++)
-                {
+        Common::FinalResult results = Deserialize<Common::FinalResult>(recvbuf);
+        Common::FinalResult sortedResults;
+        size_t countsNumber = 0;
+        for (size_t o = 0; o < results.Results.size(); o++)
+        {
+            countsNumber += results.Results[o].second;
+        }
+        std::sort(
+            results.Results.begin(),
+            results.Results.end(),
+            [](const auto& pair1, const auto& pair2) {
+                return pair1.second > pair2.second;
+            }
+        );
+        std::cout << "Elections results : " << std::endl; 
+        std::cout << "----------------------------------------------------------------------" << std::endl;
+        for (size_t i = 0; i < results.Results.size() ; i++)
+        {
 
-                    std::cout<<i+1<<'.' << results.Results[i].first.PartyName << ' ' << results.Results[i].second << std::endl;
-                    int percentage = ((results.Results[i].second*1.0 / countsNumber) * 100)/1; 
+            std::cout<<i+1<<'.' << results.Results[i].first.PartyName << ' ' << results.Results[i].second << std::endl;
+            int percentage = (int)((results.Results[i].second*1.0 / countsNumber) * 100)/1; 
                     
-                    for (size_t j = 0; j < percentage ; j++)
-                    {
-                        std::cout<<'*';
-                    }
-                    std::cout << std::endl;
-                }
-                break;
-
-            }
-            else if (iResult == 0)
+            for (size_t j = 0; j < percentage ; j++)
             {
-                // connection was closed gracefully
-                printf("Connection with voting box closed.\n");
-                closesocket(acceptedSocket);
+                std::cout<<'*';
             }
-            else
-            {
-                // there was an error during recv
-                printf("recv failed with error: %d\n", WSAGetLastError());
-                closesocket(acceptedSocket);
-            }
-        } while (iResult > 0);
-
-        // here is where server shutdown loguc could be placed
-
-    } while (1);
-
+            std::cout << std::endl;
+        }
+    }
+    else if (iResult == 0)
+    {
+        // connection was closed gracefully
+        printf("Connection with voting box closed.\n");
+        closesocket(acceptedSocket);
+    }
+    else
+    {
+        // there was an error during recv
+        printf("recv failed with error: %d\n", WSAGetLastError());
+        closesocket(acceptedSocket);
+    }
+     
+    // here is where server shutdown loguc could be placed
     // shutdown the connection since we're done
     iResult = shutdown(acceptedSocket, SD_SEND);
     if (iResult == SOCKET_ERROR)
@@ -185,6 +174,9 @@ int main()
     closesocket(listenSocket);
     closesocket(acceptedSocket);
     WSACleanup();
+
+    int a;
+    std::cin >> a;
 
     return 0;
 }

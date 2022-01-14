@@ -58,7 +58,6 @@ namespace Common {
 
 	std::deque<Common::Vote> VotesContainer::GetVotes() const
 	{
-		
 		EnterCriticalSection((LPCRITICAL_SECTION)&cs);
 		std::deque<Common::Vote> ret = m_Votes;
 		LeaveCriticalSection((LPCRITICAL_SECTION)&cs);
@@ -67,7 +66,12 @@ namespace Common {
 
 	std::vector<std::deque<Common::Vote>> VotesContainer::GetEquallySeparatedVotes(size_t parts) const
 	{
-		ASSERT(parts <= m_Votes.size());
+		if (m_Votes.size() == 0) return {};
+
+		if (parts > m_Votes.size()) {
+			parts = m_Votes.size();
+		}
+		//ASSERT(parts <= m_Votes.size());
 
 		EnterCriticalSection((LPCRITICAL_SECTION)&cs);
 		const std::deque<Common::Vote>& currentVotes = m_Votes;

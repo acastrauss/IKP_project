@@ -24,6 +24,12 @@ bool CompareFloatingPoint(double lhs, double rhs, double precision)
 		abs(lhs - rhs) < precision;
 }
 
+void LogWinsockError(std::string errorMsg, int winsockErrorCode)
+{
+	std::cout << errorMsg << std::endl;
+	std::cout << "Winsock2 error code: " << winsockErrorCode << std::endl;
+}
+
 std::vector<std::string> SplitString(std::string str, char delimiter)
 {
 	std::vector<std::string> result = {};

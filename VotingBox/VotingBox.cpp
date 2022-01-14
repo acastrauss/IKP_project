@@ -1,9 +1,5 @@
 // VotingBox.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
-#include "SocketPool/AcceptedSocketPool.h"
-#include "ProcessClientData/ProcessClientData.h"
-#include "ProcessClientData/ProcessClientWrapData.h"
 #include <WS2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -22,19 +18,21 @@
 #include <ThreadPool/ThreadPool.h>
 
 #include <Serialization/Serialization.h>
+#include <ThreadPool/ThreadingMethods.h>
+#include "AssembleCountedVotes/AssembleVotes.h"
 
-#define DEFAULT_PORT_IS 33333
 #pragma warning(disable:4996)
 
 UINT numberOfThreads = 10;
 
 UINT numberOfVotingCounters;
 std::time_t electionsEnd;
-std::vector<Common::VotingOption> votingOptionsGlobal;
+Common::VotingList votingOptionsGlobal;
+AssembleVotes assembledVotes;
 
 bool InitWindowsSockets();
 void InitializeConfig();
-void InitializeVotingOptions();
+void InitializeVotingOptions(Common::VotingList& votingList);
 
 constexpr USHORT maxClientsConected = 10;
 constexpr USHORT maxClientProcessed = 3;
@@ -43,226 +41,274 @@ DWORD WINAPI ProcessClient(LPVOID lplParam);
 DWORD WINAPI ProcessVotingCounters(LPVOID lplParam);
 
 Common::VotesContainer votesContainer;
-Common::VotingList votingListReal;
-Common::VotesToCount votesToCount;
-struct ClientThreadData {
-    SOCKET acceptedSocket;
-    Common::ThreadPool* threadPool;
-    DWORD threadId;
+
+/// <summary>
+/// Data passed to thread that calls votes counter
+/// </summary>
+struct CounterThreadData {
+    SOCKET ConnectSocket;
+    const Common::VotesToCount& VotesToCount;
+
+    CounterThreadData() = delete;
+    explicit CounterThreadData(
+        SOCKET socket,
+        const Common::VotesToCount& votesToCount
+    ): ConnectSocket(socket), VotesToCount(votesToCount){}
+
+    CounterThreadData(
+        const CounterThreadData& ref
+    ): ConnectSocket(ref.ConnectSocket), VotesToCount(ref.VotesToCount){}
+
 };
 
 
+void Elections(SOCKET listenSocket);
+void CountVotes();
+int SendFinalResults(const Common::FinalResult& results);
 
-int sendFinalResults(Common::FinalResult results);
 int main()
 {
-   /* Common::VotingOption opt1("Pera", "asdasd", 1);
-    Common::VotingOption opt2("qweqwe", "asdasd", 2);
-    Common::VotingOption opt3("fgfdg", "asdasd", 3);
+    InitializeConfig();
+    InitializeVotingOptions(votingOptionsGlobal);
 
-    votingListReal.AddOption(opt1);
-    votingListReal.AddOption(opt2);
-    votingListReal.AddOption(opt3);*/
+    SOCKET listenSocket = INVALID_SOCKET;
 
-    //std::vector<ClientThreadData> clientThreadData = {};
-    //std::vector<LPVOID> clientThreadParams = {};
+    int iResult = 0;
 
-    //for (USHORT i = 0; i < maxClientProcessed; i++)
-    //{
-    //    clientThreadData.push_back(
-    //        ClientThreadData()
-    //    );
+    if (!InitWindowsSockets()) {
+        LogWinsockError("Error on initialization of winsock.", -1);
+        return 1;
+    }
 
-    //    clientThreadParams.push_back(
-    //        &clientThreadData[i]
-    //    );
-    //}
+    addrinfo* resultingAddress = NULL;
+    addrinfo hints;
 
-    //Common::ThreadPool clientProcessPool(
-    //    ProcessClient,
-    //    clientThreadParams,
-    //    maxClientProcessed
-    //);
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;       // IPv4 address
+    hints.ai_socktype = SOCK_STREAM; // Provide reliable data streaming
+    hints.ai_protocol = IPPROTO_TCP; // Use TCP protocol
+    hints.ai_flags = AI_PASSIVE;     // 
 
-    //SOCKET listenSocket = INVALID_SOCKET;
+    // Resolve the server address and port
+    iResult = getaddrinfo(NULL, std::to_string(votingBoxPort).c_str(), &hints, &resultingAddress);
+    if (iResult != 0)
+    {
+        printf("getaddrinfo failed with error: %d\n", iResult);
+        WSACleanup();
+        return 1;
+    }
 
-    //InitializeConfig();
+    // Create a SOCKET for connecting to server
+    listenSocket = socket(AF_INET,      // IPv4 address famly
+        SOCK_STREAM,  // stream socket
+        IPPROTO_TCP); // TCP
 
-    //int iResult = 0;
+    if (listenSocket == INVALID_SOCKET)
+    {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        freeaddrinfo(resultingAddress);
+        WSACleanup();
+        return 1;
+    }
 
-    //if (!InitWindowsSockets()) {
-    //    return 1;
-    //}
+    // Setup the TCP listening socket - bind port number and local address 
+    // to socket
+    iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(resultingAddress);
+        closesocket(listenSocket);
+        WSACleanup();
+        return 1;
+    }
 
-    //addrinfo* resultingAddress = NULL;
-    //addrinfo hints;
+    // Since we don't need resultingAddress any more, free it
+    freeaddrinfo(resultingAddress);
 
-    //memset(&hints, 0, sizeof(hints));
-    //hints.ai_family = AF_INET;       // IPv4 address
-    //hints.ai_socktype = SOCK_STREAM; // Provide reliable data streaming
-    //hints.ai_protocol = IPPROTO_TCP; // Use TCP protocol
-    //hints.ai_flags = AI_PASSIVE;     // 
-
-    //// Resolve the server address and port
-    //iResult = getaddrinfo(NULL, std::to_string(votingBoxPort).c_str(), &hints, &resultingAddress);
-    //if (iResult != 0)
-    //{
-    //    printf("getaddrinfo failed with error: %d\n", iResult);
-    //    WSACleanup();
-    //    return 1;
-    //}
-
-    //// Create a SOCKET for connecting to server
-    //listenSocket = socket(AF_INET,      // IPv4 address famly
-    //    SOCK_STREAM,  // stream socket
-    //    IPPROTO_TCP); // TCP
-
-    //if (listenSocket == INVALID_SOCKET)
-    //{
-    //    printf("socket failed with error: %ld\n", WSAGetLastError());
-    //    freeaddrinfo(resultingAddress);
-    //    WSACleanup();
-    //    return 1;
-    //}
-
-    //// Setup the TCP listening socket - bind port number and local address 
-    //// to socket
-    //iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
-    //if (iResult == SOCKET_ERROR)
-    //{
-    //    printf("bind failed with error: %d\n", WSAGetLastError());
-    //    freeaddrinfo(resultingAddress);
-    //    closesocket(listenSocket);
-    //    WSACleanup();
-    //    return 1;
-    //}
-
-    //// Since we don't need resultingAddress any more, free it
-    //freeaddrinfo(resultingAddress);
-
-    //// Set listenSocket in listening mode
-    //iResult = listen(listenSocket, SOMAXCONN);
-    //if (iResult == SOCKET_ERROR)
-    //{
-    //    printf("listen failed with error: %d\n", WSAGetLastError());
-    //    closesocket(listenSocket);
-    //    WSACleanup();
-    //    return 1;
-    //}
-
-    //printf("Server initialized, waiting for clients.\n");
-   
-    //std::deque<SOCKET> acceptedSockets = {};
-
-    //std::deque<HANDLE> threadHandles = {};
-
-    //do
-    //{
-    //    // Wait for clients and accept client connections.
-    //    // Returning value is acceptedSocket used for further
-    //    // Client<->Server communication. This version of
-    //    // server will handle only one client.
-    //    SOCKET acceptedSocket = accept(listenSocket, NULL, NULL);
-
-    //    acceptedSockets.push_back(acceptedSocket);
-
-    //    if (acceptedSocket == INVALID_SOCKET)
-    //    {
-    //        printf("accept failed with error: %d\n", WSAGetLastError());
-    //        /*closesocket(listenSocket);
-    //        WSACleanup();
-    //        return 1;*/
-    //        continue;
-    //    }
-
-    //    DWORD tId;
-
-    //    HANDLE h = CreateThread(
-    //        NULL, 0, ProcessClient, &acceptedSockets[acceptedSockets.size() - 1], 0, &tId
-    //    );
-
-    //    threadHandles.push_back(h);
-
-    //} while (time(0) < electionsEnd);
-    ////} while (1);
-
-
-    //while (threadHandles.size() != 0)
-    //{
-    //    auto it = std::find_if(
-    //        threadHandles.begin(),
-    //        threadHandles.end(),
-    //        [&](HANDLE h) {
-    //            if (
-    //                WaitForSingleObject(h, 1) == WAIT_OBJECT_0
-    //                ) {
-    //                CloseHandle(h);
-    //                return true;
-    //            }
-    //            else {
-    //                return false;
-    //            }
-    //        }
-    //    );
-
-    //    if (it != threadHandles.end()) {
-    //        threadHandles.erase(it);
-    //    }
-    //}
-
-    // salji brojacima
-    // primi prebrojane
-    // salji inf ser - done
-
-
-
-    std::map<size_t, size_t> countedVotes1 = { {1,100}, {2,500},{3,270} };
-
-    Common::CountedVotes countedVotes(countedVotes1);
-    Common::VotingOption opt1(
-        "aca vucic",
-        "lopov",
-        1
-    ); Common::VotingOption opt2(
-        "dragan djilas",
-        "najposteniji",
-        2
-    ); Common::VotingOption opt3(
-        "Dragan Solak",
-        "takodje posten",
-        3
-    );
-    Common::FinalResult finalres(
-        countedVotes1,
-        { opt1,
-        opt2,
-        opt3
-        }
-    );
-
-    int s = sendFinalResults(finalres);
-    int c = 3;
-    // cleanup
-   // closesocket(listenSocket);
+    //// All connections are by default accepted by protocol stek if socket is in listening mode.
+    //// With SO_CONDITIONAL_ACCEPT parameter set to true, connections will not be accepted by default
+    bool bOptVal = true;
+    int bOptLen = sizeof(bool);
+    iResult = setsockopt(listenSocket, SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (char*)&bOptVal, bOptLen);
     
-    //WSACleanup();
+    if (iResult == SOCKET_ERROR) {
+        printf("setsockopt for SO_CONDITIONAL_ACCEPT failed with error: %u\n", WSAGetLastError());
+    }
+
+    unsigned long  mode = 1;
+    if (ioctlsocket(listenSocket, FIONBIO, &mode) != 0) {
+        printf("ioctlsocket failed with error.");
+    }
+
+
+    // Set listenSocket in listening mode
+    iResult = listen(listenSocket, SOMAXCONN);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("listen failed with error: %d\n", WSAGetLastError());
+        closesocket(listenSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    printf("Server initialized, waiting for clients.\n");
+    Elections(listenSocket);
+    CountVotes();
+    
+    Common::FinalResult finalResult(assembledVotes.GetAssembledVotes(), votingOptionsGlobal.GetOptions());
+
+    SendFinalResults(finalResult);
+
+    //salji brojacima
+    //primi prebrojane
+    //salji inf ser - done
+
+    // cleanup
+    closesocket(listenSocket);
+    WSACleanup();
 
     return 0;
 }
 
+void Elections(SOCKET listenSocket)
+{
+    std::deque<SOCKET> acceptedSockets = {};
 
+    std::deque<HANDLE> threadHandles = {};
+
+    // set of socket descriptors
+    fd_set readfds;
+
+    // timeout for select function
+    timeval timeVal;
+    timeVal.tv_sec = 1;
+    timeVal.tv_usec = 0;
+
+    do
+    {
+        // initialize socket set
+        FD_ZERO(&readfds);
+        FD_SET(listenSocket, &readfds);
+
+        // wait for events on set
+        int selectResult = select(0, &readfds, NULL, NULL, &timeVal);
+
+        if (selectResult == SOCKET_ERROR)
+        {
+            LogWinsockError("Select failed ", WSAGetLastError());
+            closesocket(listenSocket);
+            WSACleanup();
+            exit(1);
+        }
+        // timeout
+        else if (selectResult == 0) {
+            continue;
+        }
+        else if (FD_ISSET(listenSocket, &readfds)) {
+            // Wait for clients and accept client connections.
+                   // Returning value is acceptedSocket used for further
+                   // Client<->Server communication. This version of
+                   // server will handle only one client.
+            SOCKET acceptedSocket = accept(listenSocket, NULL, NULL);
+
+            acceptedSockets.push_back(acceptedSocket);
+
+            if (acceptedSocket == INVALID_SOCKET)
+            {
+                LogWinsockError("accept failed.", WSAGetLastError());
+                continue;
+            }
+
+            DWORD tId;
+
+            HANDLE h = CreateThread(
+                NULL, 0, ProcessClient, &acceptedSockets[acceptedSockets.size() - 1], 0, &tId
+            );
+
+            threadHandles.push_back(h);
+        }
+
+    } while (time(0) < electionsEnd);
+
+    WaitCloseThreadHandles(&threadHandles);
+}
+
+
+void CountVotes()
+{
+    auto splittedvotes = votesContainer.GetEquallySeparatedVotes((size_t)votingCountersNumber);
+
+    std::vector<CounterThreadData> counterThreadData = {};
+    std::deque<HANDLE> threadHandles = {};
+    std::vector<Common::VotesToCount> votesToCount = {};
+
+    for (short i = 0; i  < votingCountersNumber; i ++)
+    {
+        SOCKET connectSocket = INVALID_SOCKET;
+
+        sockaddr_in counterAddress;
+        counterAddress.sin_family = AF_INET;
+        counterAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+        counterAddress.sin_port = htons(votingCountersFirstPort + i);
+
+        connectSocket = socket(AF_INET,
+            SOCK_STREAM,
+            IPPROTO_TCP);
+
+        if (connectSocket == INVALID_SOCKET)
+        {
+            LogWinsockError("socket failed.", WSAGetLastError());
+            closesocket(connectSocket);
+            continue;
+        }
+
+        // connect to server specified in serverAddress and socket connectSocket
+        if (connect(connectSocket, (SOCKADDR*)&counterAddress, sizeof(counterAddress)) == SOCKET_ERROR)
+        {
+            LogWinsockError("Unable to connect to counter", WSAGetLastError());
+            closesocket(connectSocket);
+            continue;
+        }
+
+        votesToCount.push_back(
+            Common::VotesToCount(
+                splittedvotes[i], votingOptionsGlobal.GetOptions()
+            )
+        );
+
+        counterThreadData.push_back(
+            CounterThreadData(
+                connectSocket,
+                votesToCount[i]
+            )
+        );
+
+        threadHandles.push_back(
+            CreateThread(
+                NULL, 0, ProcessVotingCounters, &counterThreadData[i], 0, 0
+            )
+        );
+    }
+
+    WaitCloseThreadHandles(&threadHandles);
+}
+
+// note: lower default buffer size
 DWORD __stdcall ProcessVotingCounters(LPVOID lplParam)
 {
-    SOCKET accSocket = *((SOCKET*)lplParam);
+    CounterThreadData* ctd = ((CounterThreadData*)lplParam);
+    SOCKET connectSocket = ctd->ConnectSocket;
+    Common::VotesToCount votesToCount = ctd->VotesToCount;
+
+    int iResult = 0;
 
     char recvBuff[defaultBufferLength];
-    int iResult;
-    votesToCount.Votes = votesContainer.GetVotes();
-    votesToCount.Options =votingOptionsGlobal;
+    
     char* message = Serialize(votesToCount);
 
     iResult = send(
-        accSocket,
+        connectSocket,
         message,
         (int)votesToCount.BufferSize(),
         0
@@ -272,14 +318,13 @@ DWORD __stdcall ProcessVotingCounters(LPVOID lplParam)
 
     if (iResult == SOCKET_ERROR)
     {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        //closesocket(clientData->AcceptedSocket);
-        //WSACleanup();
+        LogWinsockError("send failed", WSAGetLastError());
+        closesocket(connectSocket);
         return 1;
     }
 
     iResult = recv(
-        accSocket,
+        connectSocket,
         recvBuff,
         defaultBufferLength,
         0
@@ -287,31 +332,22 @@ DWORD __stdcall ProcessVotingCounters(LPVOID lplParam)
 
     if (iResult == SOCKET_ERROR)
     {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        //closesocket(clientData->AcceptedSocket);
-        //WSACleanup();
+        LogWinsockError("recv failed", WSAGetLastError());
+        closesocket(connectSocket);
         return 1;
     }
-    // sabrati sve vracene izbrojane glasove iz niti
-  /*  Common::Vote vote = Deserialize<Common::Vote>(recvBuff);
-    vote.VoteTime = time(0);
-
-    votesContainer.AddVote(vote);
-
-    std::cout << "Voter " << vote.VoterId << " voted for " << vote.PartyNumber << " at " << ctime(&vote.VoteTime) << std::endl;*/
-   
     
-    
-    
-    //nakon toga ovo pozvati 
-    //sendFinalResults(finalres)
+    Common::CountedVotes countedVotes = Deserialize<Common::CountedVotes>(recvBuff);
 
-    shutdown(accSocket, SD_BOTH);
-    closesocket(accSocket);
+    assembledVotes.AddVotes(countedVotes.GetCountedVotes());
+
+    shutdown(connectSocket, SD_BOTH);
+    closesocket(connectSocket);
 
     return 0;
 }
 
+#include <algorithm>
 
 DWORD __stdcall ProcessClient(LPVOID lplParam)
 {
@@ -319,69 +355,165 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
     
     char recvBuff[defaultBufferLength];
     int iResult;
+    int iSelectResult = 0;
+    ULONG mode = 0;
 
-    char* message = Serialize(votingListReal);
+    auto LambdaOnFinishThread = [&](SOCKET socket) {
+        shutdown(socket, SD_BOTH);
+        closesocket(socket);
+    };
 
-    iResult = send(
-        accSocket,
-        message,
-        (int)votingListReal.BufferSize(),
-        0
-    );
-
-    delete[] message;
-
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        //closesocket(clientData->AcceptedSocket);
-        //WSACleanup();
+    if (iSelectResult = ioctlsocket(
+        accSocket, FIONBIO, &mode
+    ) != 0) {
+        LogWinsockError("Error when setting accepted socket to be non-blocking.", WSAGetLastError());
+        LambdaOnFinishThread(accSocket);
         return 1;
-    }
+    }   
 
-    iResult = recv(
-        accSocket,
-        recvBuff,
-        defaultBufferLength,
-        0
-    );
+    timeval timeVal;
+    timeVal.tv_sec = 0;
+    timeVal.tv_usec = (long)pow(10, 5); // 100ms
 
-    if (iResult == SOCKET_ERROR)
+    fd_set readfds;
+    fd_set writefds;
+
+
+    UINT maxNumOfTries = 500; // 500 * 100ms = 50 000ms = 50s
+    UINT numOfTries = 0;
+
+    // send options non blocking
+    while (true)
     {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        //closesocket(clientData->AcceptedSocket);
-        //WSACleanup();
-        return 1;
+        FD_ZERO(&writefds);
+        FD_SET(accSocket, &writefds);
+
+        iSelectResult = select(0, NULL, &writefds, NULL, &timeVal);
+
+        if (iSelectResult == SOCKET_ERROR) {
+            LogWinsockError(
+                "Send failed when processing client.",
+                WSAGetLastError()
+            );
+            LambdaOnFinishThread(accSocket);
+        }
+        // timeout
+        else if (iSelectResult == 0) {
+            if (++numOfTries == maxNumOfTries){
+                LambdaOnFinishThread(accSocket);
+                return 1;
+            }
+            else {
+                continue;
+            }
+        }
+        else if (FD_ISSET(accSocket, &writefds)) {
+            
+            char* message = Serialize(votingOptionsGlobal);
+
+            iResult = send(
+                accSocket,
+                message,
+                (int)votingOptionsGlobal.BufferSize(),
+                0
+            );
+
+            delete[] message;
+
+            if (iResult == SOCKET_ERROR)
+            {
+                LogWinsockError("recv failed", WSAGetLastError());
+                LambdaOnFinishThread(accSocket);
+                return 1;
+            }
+            
+            numOfTries = 0;
+            break;
+        }
+        else {
+            LogWinsockError("Undefined behaviour at send.", WSAGetLastError());
+            LambdaOnFinishThread(accSocket);
+            return 1;
+        }
     }
-
-    Common::Vote vote = Deserialize<Common::Vote>(recvBuff);
-    vote.VoteTime = time(0);
-
-    votesContainer.AddVote(vote);
     
-    std::cout << "Voter " << vote.VoterId << " voted for " << vote.PartyNumber << " at " << ctime(&vote.VoteTime) << std::endl;
+    // receive vote non blocking
+    while (true)
+    {
+        FD_ZERO(&readfds);
+        FD_SET(accSocket, &readfds);
 
-    shutdown(accSocket, SD_BOTH);
-    closesocket(accSocket);
+        iSelectResult = select(0, &readfds, NULL, NULL, &timeVal);
+
+        if (iSelectResult == SOCKET_ERROR) {
+            LogWinsockError(
+                "Receive failed when processing client.",
+                WSAGetLastError()
+            );
+            LambdaOnFinishThread(accSocket);
+            return 1;
+        }
+        // timeout
+        else if (iSelectResult == 0) {
+            if (++numOfTries == maxNumOfTries){
+                LambdaOnFinishThread(accSocket);
+                return 1;
+            }
+            else {
+                continue;
+            }
+        }
+        else if (FD_ISSET(accSocket, &readfds)) {
+            
+            iResult = recv(
+                accSocket,
+                recvBuff,
+                defaultBufferLength,
+                0
+            );
+
+            if (iResult == SOCKET_ERROR)
+            {
+                LogWinsockError("recv failed", WSAGetLastError());
+                LambdaOnFinishThread(accSocket);
+                return 1;
+            }
+
+            Common::VotesContainer clientVoteContainer = Deserialize<Common::VotesContainer>(recvBuff);
+            const std::deque<Common::Vote>& clientVotes = clientVoteContainer.GetVotes();
+
+            std::for_each(
+                clientVotes.begin(),
+                clientVotes.end(),
+                [&](const Common::Vote& v) {
+                    votesContainer.AddVote(v);
+
+                    std::cout << "Voter " << v.VoterId << " voted for "
+                        << v.PartyNumber << " at " << ctime(&v.VoteTime) << std::endl;
+                }
+            );
+
+            numOfTries = 0;
+            break;
+        }
+        else {
+            LogWinsockError("Undefined behaviour at receive.", WSAGetLastError());
+            LambdaOnFinishThread(accSocket);
+            return 1;
+        }
+    }
+    
+    LambdaOnFinishThread(accSocket);
 
     return 0;
 }
 
 
-int sendFinalResults(Common::FinalResult results) {
+int SendFinalResults(const Common::FinalResult& results) {
     SOCKET connectSocket = INVALID_SOCKET;
     // variable used to store function return value
     int iResult;
     // message to send
-
-    
-    if (InitWindowsSockets() == false)
-    {
-        // we won't log anything since it will be logged
-        // by InitializeWindowsSockets() function
-        return 1;
-    }
-
     // create a socket
     connectSocket = socket(AF_INET,
         SOCK_STREAM,
@@ -398,14 +530,16 @@ int sendFinalResults(Common::FinalResult results) {
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-    serverAddress.sin_port = htons(DEFAULT_PORT_IS);//port informacionog servera
+    serverAddress.sin_port = htons(informationServicePort);//port informacionog servera
     // connect to server specified in serverAddress and socket connectSocket
     if (connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
     {
         printf("Unable to connect to server.\n");
         closesocket(connectSocket);
         WSACleanup();
+        return 1;
     }
+
     char* message = Serialize(results);
 
     iResult = send(
@@ -420,17 +554,13 @@ int sendFinalResults(Common::FinalResult results) {
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
-        //closesocket(clientData->AcceptedSocket);
-        //WSACleanup();
+        closesocket(connectSocket);
+        WSACleanup();
         return 1;
     }
 
-
-
+    return 0;
 }
-
-
-
 
 #pragma warning(disable:4996)
 #include <sstream>
@@ -449,6 +579,8 @@ void InitializeConfig()
     file.open(
         configPath
     );
+
+    ASSERT(file.is_open());
 
     std::map<std::string, std::string> configValues = {};
     std::string line;
@@ -492,9 +624,8 @@ void InitializeConfig()
     }
 }
 
-void InitializeVotingOptions()
+void InitializeVotingOptions(Common::VotingList& votingList)
 {
-
     std::wstring configPath = CurrentDirectoryPath() + L"\\votingOptions.csv";
 
     std::ifstream file;
@@ -503,9 +634,9 @@ void InitializeVotingOptions()
         configPath
     );
 
-    std::string line;
+    ASSERT(file.is_open());
 
-    Common::VotingList votingList;
+    std::string line;
 
     std::int16_t brojac = 1;
     std::string partyLeader;
@@ -530,17 +661,15 @@ void InitializeVotingOptions()
                 else
                     if (brojac % 4 == 3) {
                         size_t optNum = stol(splitted[1], nullptr, 10);
-                        vOption = Common::VotingOption(partyLeader, partyName, optNum);
-                        votingList.AddOption(vOption);
+                        votingList.AddOption(
+                            Common::VotingOption(partyLeader, partyName, optNum)
+                        );
                     }
         }
         brojac++;
     }
 
     file.close();
-    votingOptionsGlobal = votingList.GetOptions();
-
-
 }
 
 bool InitWindowsSockets()

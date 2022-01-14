@@ -20,10 +20,10 @@ namespace Common {
 		m_Options = ref.m_Options;
 	}
 
-	VotingList::~VotingList()
-	{
-		m_Options.clear();
-	}
+	//VotingList::~VotingList()
+	//{
+	//	//m_Options.clear();
+	//}
 
 	void VotingList::AddOption(const VotingOption& option)
 	{

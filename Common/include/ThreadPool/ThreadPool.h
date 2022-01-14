@@ -9,7 +9,9 @@ namespace Common {
 	{
 	private:
 		std::vector<ThreadInfo> m_Threads;
-		unsigned short m_TakenThreads = 0;
+		unsigned short m_TakenThreads;
+		bool initialized;
+
 
 		CONDITION_VARIABLE cvThreads;
 		CRITICAL_SECTION csThreads;
@@ -22,13 +24,24 @@ namespace Common {
 		/// <param name="poolSize"></param>
 		explicit ThreadPool(
 			DWORD(WINAPI* f)(LPVOID lpParam),
-			std::vector<LPVOID> lpParams,
+			const std::vector<LPVOID>& lpParams,
 			USHORT poolSize
 		);
 
 		~ThreadPool();
 
-		ThreadPool() = delete;
+		ThreadPool();
+
+		/// <summary>
+		/// This method should be used only when pool is created with empty constructor,
+		/// and it should be called only once
+		/// </summary>
+		/// <param name="rhs"></param>
+		void AddThreadsAfterwards(
+			DWORD(WINAPI* f)(LPVOID lpParam),
+			std::vector<LPVOID> lpParams,
+			USHORT poolSize
+		);
 
 		ThreadPool(
 			const ThreadPool& rhs
@@ -44,7 +57,7 @@ namespace Common {
 		/// Returns: ThreadInfo with Taken=true if there is available thread,
 		/// Thread info with Taken=false and Handle=NULL othrewise
 		/// </returns>
-		ThreadInfo GetThreadNonBlocking();
+		ThreadInfo* GetThreadNonBlocking();
 		
 		/// <summary>
 		/// </summary>
@@ -52,9 +65,11 @@ namespace Common {
 		/// Returns: handle for thread if there is one available,
 		/// blocks until there is one available otherwise
 		/// </returns>
-		ThreadInfo GetThreadBlocking();
+		ThreadInfo* GetThreadBlocking();
 
 		void ReturnThreadToPool(DWORD tId);
+
+		void WaitForThreads();
 	};
 }
 

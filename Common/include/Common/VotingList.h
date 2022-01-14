@@ -23,7 +23,7 @@ namespace Common {
 			const VotingList& ref
 		);
 
-		~VotingList();
+		//~VotingList();
 
 		void AddOption(
 			const VotingOption& option

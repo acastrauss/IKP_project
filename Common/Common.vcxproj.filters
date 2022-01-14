@@ -63,6 +63,9 @@
     <ClInclude Include="include\ThreadPool\ThreadInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ThreadPool\ThreadingMethods.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -111,6 +114,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ThreadPool\ThreadInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThreadPool\ThreadingMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

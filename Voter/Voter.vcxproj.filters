@@ -18,5 +18,13 @@
     <ClCompile Include="Voter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VoterCV\VoterCV.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VoterCV\VoterCV.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

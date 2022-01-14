@@ -164,6 +164,7 @@
     <ClInclude Include="include\Common\VotingOption.h" />
     <ClInclude Include="include\Serialization\Deserialization.h" />
     <ClInclude Include="include\ThreadPool\ThreadInfo.h" />
+    <ClInclude Include="include\ThreadPool\ThreadingMethods.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="include\Common\Vote.h" />
     <ClInclude Include="include\Common\VotesContainer.h" />
@@ -193,6 +194,7 @@
     <ClCompile Include="src\Common\VotesContainer.cpp" />
     <ClCompile Include="src\Common\VotesToCount.cpp" />
     <ClCompile Include="src\ThreadPool\ThreadInfo.cpp" />
+    <ClCompile Include="src\ThreadPool\ThreadingMethods.cpp" />
     <ClCompile Include="src\ThreadPool\ThreadPool.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

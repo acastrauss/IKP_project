@@ -7,13 +7,15 @@ namespace Common {
 		DWORD Id;
 		LPVOID Parameter; // so parameters can be edited in runtime
 		bool Taken = false;
+		bool Finished = false;
 
 		ThreadInfo();
 		ThreadInfo(
 			HANDLE handle,
 			DWORD id,
 			LPVOID parameter,
-			bool taken = false
+			bool taken = false,
+			bool finished = false
 		);
 
 		ThreadInfo(

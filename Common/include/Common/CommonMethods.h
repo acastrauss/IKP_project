@@ -12,6 +12,8 @@
 #define SAFE_DELETE_HANDLE(x) if(x) CloseHandle(x)
 #endif // !SAFE_DELETE_HANDLE
 
+void LogWinsockError(std::string errorMsg, int winsockErrorCode);
+
 template<typename T>
 bool CompareFloatingPoint(
 	T lhs, T rhs, T precision

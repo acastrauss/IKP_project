@@ -8,15 +8,17 @@ namespace Common {
 		Handle = NULL;
 		Id = -1;
 		Taken = false;
+		Finished = false;
 		Parameter = NULL;
 	}
 
-	Common::ThreadInfo::ThreadInfo(HANDLE handle, DWORD id, LPVOID parameter, bool taken)
+	Common::ThreadInfo::ThreadInfo(HANDLE handle, DWORD id, LPVOID parameter, bool taken, bool finished)
 	{
 		Handle = handle;
 		Id = id;
 		Parameter = parameter;
 		Taken = taken;
+		Finished = finished;
 	}
 
 	Common::ThreadInfo::ThreadInfo(const ThreadInfo& rhs)
@@ -25,6 +27,7 @@ namespace Common {
 		Id = rhs.Id;
 		Parameter = rhs.Parameter;
 		Taken = rhs.Taken;
+		Finished = rhs.Finished;
 	}
 
 	ThreadInfo& Common::ThreadInfo::operator=(const ThreadInfo& rhs)
@@ -33,6 +36,7 @@ namespace Common {
 		Id = rhs.Id;
 		Parameter = rhs.Parameter;
 		Taken = rhs.Taken;
+		Finished = rhs.Finished;
 		return *this;
 	}
 }
