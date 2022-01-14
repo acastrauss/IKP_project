@@ -36,6 +36,8 @@ namespace Common {
 		void SortOptions();
 
 		std::vector<VotingOption> GetOptions() const;
+
+		friend std::ostream& operator<<(std::ostream& os, const VotingList& vote);
 	};
 
 }

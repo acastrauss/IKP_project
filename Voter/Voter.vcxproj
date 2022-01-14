@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClCompile Include="Voter.cpp" />
     <ClCompile Include="VoterCV\VoterCV.cpp" />
+    <ClCompile Include="VotingThreadData\VotingThreadData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VoterCV\VoterCV.h" />
+    <ClInclude Include="VotingThreadData\VotingThreadData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

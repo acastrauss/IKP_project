@@ -76,5 +76,39 @@ namespace Common {
 	{
 		return m_Options;
 	}
+
+	std::ostream& operator<<(std::ostream& os, const VotingList& vote)
+	{
+		const char* separator = "------------------------------------------------";
+
+		os << separator << std::endl;
+	
+		std::vector<Common::VotingOption> options = vote.GetOptions();
+
+		std::sort(
+			options.begin(),
+			options.end(),
+			[](
+				const Common::VotingOption& vo1,
+				const Common::VotingOption& vo2
+				) {
+					return vo1.PartyNumber < vo2.PartyNumber;
+			}
+		);
+
+		std::for_each(
+			options.begin(),
+			options.end(),
+			[&](const Common::VotingOption& vo) {
+				os << vo.PartyNumber <<
+					". " << vo.PartyName << "  " << vo.PartyLeader
+					<< std::endl;
+			}
+		);
+
+		os << separator << std::endl;
+
+		return os;
+	}
 }
 

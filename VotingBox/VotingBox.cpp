@@ -1,6 +1,7 @@
 // VotingBox.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#include <WS2tcpip.h>
+#include "VBThreadData/CounterThreadData.h"
+
 #pragma comment(lib, "Ws2_32.lib")
 
 
@@ -41,26 +42,6 @@ DWORD WINAPI ProcessClient(LPVOID lplParam);
 DWORD WINAPI ProcessVotingCounters(LPVOID lplParam);
 
 Common::VotesContainer votesContainer;
-
-/// <summary>
-/// Data passed to thread that calls votes counter
-/// </summary>
-struct CounterThreadData {
-    SOCKET ConnectSocket;
-    const Common::VotesToCount& VotesToCount;
-
-    CounterThreadData() = delete;
-    explicit CounterThreadData(
-        SOCKET socket,
-        const Common::VotesToCount& votesToCount
-    ): ConnectSocket(socket), VotesToCount(votesToCount){}
-
-    CounterThreadData(
-        const CounterThreadData& ref
-    ): ConnectSocket(ref.ConnectSocket), VotesToCount(ref.VotesToCount){}
-
-};
-
 
 void Elections(SOCKET listenSocket);
 void CountVotes();
@@ -244,9 +225,9 @@ void CountVotes()
     std::vector<LPVOID> counterThreadData = {};
     
     std::deque<HANDLE> threadHandles = {};
-    std::vector<Common::VotesToCount> votesToCount = {};
+    std::vector<SOCKET> connectSockets = {};
 
-    for (short i = 0; i  < votingCountersNumber; i ++)
+    for (short i = 0; i < votingCountersNumber; i++)
     {
         SOCKET connectSocket = INVALID_SOCKET;
 
@@ -274,19 +255,22 @@ void CountVotes()
             continue;
         }
 
-        votesToCount.push_back(
+        CounterThreadData* ctdp = new CounterThreadData(
+            connectSocket, 
             Common::VotesToCount(
                 splittedvotes[i], votingOptionsGlobal.GetOptions()
             )
         );
 
         counterThreadData.push_back(
-            new CounterThreadData(
-                connectSocket,
-                votesToCount[i]
-            )
+            ctdp
         );
 
+        connectSockets.push_back(connectSocket);
+    }
+
+    for (short i = 0; i  < votingCountersNumber; i ++)
+    {
         threadHandles.push_back(
             CreateThread(
                 NULL, 0, ProcessVotingCounters, counterThreadData[i], 0, 0

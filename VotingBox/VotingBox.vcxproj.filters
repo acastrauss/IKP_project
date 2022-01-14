@@ -21,9 +21,15 @@
     <ClCompile Include="AssembleCountedVotes\AssembleVotes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VBThreadData\CounterThreadData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssembleCountedVotes\AssembleVotes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VBThreadData\CounterThreadData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

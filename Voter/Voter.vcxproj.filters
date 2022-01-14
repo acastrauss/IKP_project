@@ -21,9 +21,15 @@
     <ClCompile Include="VoterCV\VoterCV.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VotingThreadData\VotingThreadData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VoterCV\VoterCV.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VotingThreadData\VotingThreadData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

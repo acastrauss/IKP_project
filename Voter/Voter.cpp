@@ -20,11 +20,13 @@
 #include <ThreadPool/ThreadPool.h>
 #include <ThreadPool/ThreadingMethods.h>
 #include "VoterCV/VoterCV.h"
+#include "VotingThreadData/VotingThreadData.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
 UINT numberOfVoters = 1000;
-constexpr USHORT voterThreads = 11;
+constexpr USHORT voterThreads = 3;
+bool userInput = false;
 
 void InitializeConfig();
 bool InitializeWindowsSockets();
@@ -32,48 +34,23 @@ Common::Vote SelectVote(const Common::VotingList votingList);
 
 DWORD WINAPI VotingProcess(LPVOID lpParam);
 
-struct VotingThreadData {
-    UINT NumberOfVotesPerThread;
-    const Common::VotingList& VotingList;
-    Common::VotesContainer* VotesContainer;
-
-    VotingThreadData() = delete;
-
-    VotingThreadData(
-        UINT numberOfVotesPerThread,
-        const Common::VotingList& votingList,
-        Common::VotesContainer* votesContainerP
-    ) :
-        NumberOfVotesPerThread(numberOfVotesPerThread),
-        VotingList(votingList),
-        VotesContainer(votesContainerP)
-    {}
-
-    VotingThreadData(
-        const VotingThreadData& ref
-    ): NumberOfVotesPerThread(ref.NumberOfVotesPerThread),
-        VotingList(ref.VotingList),
-        VotesContainer(ref.VotesContainer)
-    {}
-
-    VotingThreadData& operator=(
-        const VotingThreadData& rhs
-        ) = delete;
-};
-
 std::vector<UINT> EqualPartsNumberDivide(UINT number, UINT parts);
 
-int usedThreads = 0;
 DWORD voterId = 0;
-
 VoterCV voterCV(maxVotersAtTime);
+Common::VotesContainer votesContainer;
+sockaddr_in serverAddress;
 
-//CRITICAL_SECTION cs;
-//CONDITION_VARIABLE cv;
-
+CRITICAL_SECTION cs;
+CONDITION_VARIABLE cv;
 
 int main()
 {
+    if (userInput) {
+        InitializeConditionVariable(&cv);
+        InitializeCriticalSection(&cs);
+    }
+    
     auto LambdaOnFinish = [&](SOCKET socket = INVALID_SOCKET) {
         if (socket != INVALID_SOCKET) {
             //shutdown(socket, SD_BOTH);
@@ -81,18 +58,12 @@ int main()
         }
         WSACleanup();
     };
-
     
-    /*
-    InitializeConditionVariable(&cv);
-    InitializeCriticalSection(&cs);*/
-
     if (InitializeWindowsSockets() == false)
     {
         return 1;
     }
     
-    sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
     serverAddress.sin_port = htons(votingBoxPort);
@@ -129,7 +100,6 @@ int main()
     }
 
     Common::VotingList votingList = Deserialize<Common::VotingList>(buffer);
-    Common::VotesContainer votesContainer;
 
     std::vector<UINT> votesPerThread = EqualPartsNumberDivide(numberOfVoters, (UINT)voterThreads);
 
@@ -146,12 +116,6 @@ int main()
         votingThreadParams.push_back(vtdp);
     }
 
-    for (size_t i = 0; i < votingThreadParams.size(); i++)
-    {
-        VotingThreadData* vtd = ((VotingThreadData*)votingThreadParams[i]);
-        int a = 5;
-    }
-
     Common::ThreadPool votingThreadPool(
         VotingProcess,
         votingThreadParams,
@@ -164,7 +128,7 @@ int main()
         clientThreadsNumber < voterThreads
         ) {
 
-        voterCV.StopIfMax();
+        //voterCV.StopIfMax();
 
         Common::ThreadInfo* tInfo = votingThreadPool.GetThreadBlocking();
 
@@ -174,7 +138,7 @@ int main()
             NULL, 0, VotingProcess, &serverAddress, 0, &tId
         );*/
 
-        voterCV.IncreaseVoters();
+        //voterCV.IncreaseVoters();
 
         clientThreadsNumber++;
         //threadHandles.push_back(h);
@@ -214,7 +178,9 @@ int main()
 
     LambdaOnFinish(connectSocket);
 
-    //DeleteCriticalSection(&cs);
+    if (userInput) {
+        DeleteCriticalSection(&cs);
+    }
 
     return 0;
 }
@@ -254,14 +220,32 @@ std::vector<UINT> EqualPartsNumberDivide(UINT number, UINT parts)
 
 Common::Vote SelectVote(const Common::VotingList votingList)
 {
-    std::vector<Common::VotingOption> options = votingList.GetOptions();
-
-    std::random_device rd; // obtain a random number from hardware
-    std::mt19937 gen(rd()); // seed the generator
-    std::uniform_int_distribution<> distr(0, (int)options.size() - 1); // define the range
-    
     Common::Vote vote;
-    vote.PartyNumber = options[distr(gen)].PartyNumber;
+
+    if (userInput) {
+        EnterCriticalSection(&cs);
+
+        std::cout << votingList << std::endl;
+        std::cout << "Please pick your option:" << std::endl;
+    
+        UINT opt = 0;
+        std::cin >> opt;
+    
+        vote.PartyNumber = opt;
+    
+        LeaveCriticalSection(&cs);
+    }
+    else {
+        std::vector<Common::VotingOption> options = votingList.GetOptions();
+
+        std::random_device rd; // obtain a random number from hardware
+        std::mt19937 gen(rd()); // seed the generator
+        std::uniform_int_distribution<> distr(0, (int)options.size() - 1); // define the range
+
+        vote.PartyNumber = options[distr(gen)].PartyNumber;
+    }
+
+    vote.VoteTime = time(0);
     vote.VoterId = (long long)(++voterId + GetCurrentProcessId());
 
     return vote;
@@ -280,7 +264,7 @@ DWORD __stdcall VotingProcess(LPVOID lpParam)
         vcp->AddVote(vote);
     }
 
-    voterCV.VoterFinished();
+    //voterCV.VoterFinished();
 
     return 0;
 }

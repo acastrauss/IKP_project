@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssembleCountedVotes\AssembleVotes.cpp" />
+    <ClCompile Include="VBThreadData\CounterThreadData.cpp" />
     <ClCompile Include="VotingBox.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssembleCountedVotes\AssembleVotes.h" />
+    <ClInclude Include="VBThreadData\CounterThreadData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

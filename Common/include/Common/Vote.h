@@ -31,5 +31,6 @@ namespace Common {
 		size_t BufferSize() const;
 
 		Vote& operator=(const Vote& rhs);
+		
 	};
 }
