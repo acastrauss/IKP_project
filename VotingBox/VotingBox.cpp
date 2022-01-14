@@ -234,12 +234,15 @@ void Elections(SOCKET listenSocket)
     WaitCloseThreadHandles(&threadHandles);
 }
 
+#include <algorithm>
 
 void CountVotes()
 {
     auto splittedvotes = votesContainer.GetEquallySeparatedVotes((size_t)votingCountersNumber);
 
-    std::vector<CounterThreadData> counterThreadData = {};
+    // make this array
+    std::vector<LPVOID> counterThreadData = {};
+    
     std::deque<HANDLE> threadHandles = {};
     std::vector<Common::VotesToCount> votesToCount = {};
 
@@ -278,7 +281,7 @@ void CountVotes()
         );
 
         counterThreadData.push_back(
-            CounterThreadData(
+            new CounterThreadData(
                 connectSocket,
                 votesToCount[i]
             )
@@ -286,12 +289,23 @@ void CountVotes()
 
         threadHandles.push_back(
             CreateThread(
-                NULL, 0, ProcessVotingCounters, &counterThreadData[i], 0, 0
+                NULL, 0, ProcessVotingCounters, counterThreadData[i], 0, 0
             )
         );
     }
 
     WaitCloseThreadHandles(&threadHandles);
+
+    std::for_each(
+        counterThreadData.begin(),
+        counterThreadData.end(),
+        [](LPVOID lp) {
+            CounterThreadData* ctd = ((CounterThreadData*)lp);
+            delete ctd;
+        }
+    );
+
+    counterThreadData.clear();
 }
 
 // note: lower default buffer size

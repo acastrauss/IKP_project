@@ -33,30 +33,32 @@ Common::Vote SelectVote(const Common::VotingList votingList);
 DWORD WINAPI VotingProcess(LPVOID lpParam);
 
 struct VotingThreadData {
-    sockaddr_in ServerAddress;
     UINT NumberOfVotesPerThread;
-    
+    const Common::VotingList& VotingList;
+    Common::VotesContainer* VotesContainer;
+
     VotingThreadData() = delete;
 
     VotingThreadData(
-        sockaddr_in serverAddress,
-        UINT numberOfVotesPerThread
-    ) : ServerAddress(serverAddress),
-        NumberOfVotesPerThread(numberOfVotesPerThread)
+        UINT numberOfVotesPerThread,
+        const Common::VotingList& votingList,
+        Common::VotesContainer* votesContainerP
+    ) :
+        NumberOfVotesPerThread(numberOfVotesPerThread),
+        VotingList(votingList),
+        VotesContainer(votesContainerP)
     {}
 
     VotingThreadData(
         const VotingThreadData& ref
-    ): ServerAddress(ref.ServerAddress),
-        NumberOfVotesPerThread(ref.NumberOfVotesPerThread)
+    ): NumberOfVotesPerThread(ref.NumberOfVotesPerThread),
+        VotingList(ref.VotingList),
+        VotesContainer(ref.VotesContainer)
     {}
 
     VotingThreadData& operator=(
         const VotingThreadData& rhs
-        ) {
-        ServerAddress = rhs.ServerAddress;
-        NumberOfVotesPerThread = rhs.NumberOfVotesPerThread;
-    }
+        ) = delete;
 };
 
 std::vector<UINT> EqualPartsNumberDivide(UINT number, UINT parts);
@@ -69,35 +71,85 @@ VoterCV voterCV(maxVotersAtTime);
 //CRITICAL_SECTION cs;
 //CONDITION_VARIABLE cv;
 
-// create and initialize address structure
-sockaddr_in serverAddress;
-std::vector<UINT> votesPerThread;
 
 int main()
-{/*
+{
+    auto LambdaOnFinish = [&](SOCKET socket = INVALID_SOCKET) {
+        if (socket != INVALID_SOCKET) {
+            //shutdown(socket, SD_BOTH);
+            closesocket(socket);
+        }
+        WSACleanup();
+    };
+
+    
+    /*
     InitializeConditionVariable(&cv);
     InitializeCriticalSection(&cs);*/
 
     if (InitializeWindowsSockets() == false)
     {
-        // we won't log anything since it will be logged
-        // by InitializeWindowsSockets() function
         return 1;
     }
-
+    
+    sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
     serverAddress.sin_port = htons(votingBoxPort);
 
-    votesPerThread = EqualPartsNumberDivide(numberOfVoters, (UINT)voterThreads);
+    // create a socket
+    SOCKET connectSocket = socket(AF_INET,
+        SOCK_STREAM,
+        IPPROTO_TCP);
 
-    UINT votingThreadData[voterThreads];
+    if (connectSocket == INVALID_SOCKET)
+    {
+        LogWinsockError("socket failed", WSAGetLastError());
+        LambdaOnFinish();
+        return 1;
+    }
+
+    // connect to server specified in serverAddress and socket connectSocket
+    if (connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
+    {
+        LogWinsockError("Unable to connect to server.", WSAGetLastError());
+        LambdaOnFinish(connectSocket);
+        return 1;
+    }
+
+    char buffer[defaultBufferLength];
+
+    // Send an prepared message with null terminator included
+    int iResult = recv(connectSocket, buffer, defaultBufferLength, 0);
+
+    if (iResult == SOCKET_ERROR || iResult == 0) {
+        LogWinsockError("Did not receive options.", WSAGetLastError());
+        LambdaOnFinish(connectSocket);
+        return 1;
+    }
+
+    Common::VotingList votingList = Deserialize<Common::VotingList>(buffer);
+    Common::VotesContainer votesContainer;
+
+    std::vector<UINT> votesPerThread = EqualPartsNumberDivide(numberOfVoters, (UINT)voterThreads);
+
     std::vector<LPVOID> votingThreadParams = {};
 
-    for (size_t i = 0; i < votesPerThread.size(); i++)
+    for (USHORT i = 0; i < voterThreads; i++)
     {
-        votingThreadData[i] = votesPerThread[i];
-        votingThreadParams.push_back(votingThreadData + i);
+        VotingThreadData* vtdp = new VotingThreadData(
+            votesPerThread[i],
+            votingList,
+            &votesContainer
+        );
+
+        votingThreadParams.push_back(vtdp);
+    }
+
+    for (size_t i = 0; i < votingThreadParams.size(); i++)
+    {
+        VotingThreadData* vtd = ((VotingThreadData*)votingThreadParams[i]);
+        int a = 5;
     }
 
     Common::ThreadPool votingThreadPool(
@@ -105,8 +157,6 @@ int main()
         votingThreadParams,
         voterThreads
     );
-
-    //std::deque<HANDLE> threadHandles = {};
 
     USHORT clientThreadsNumber = 0;
 
@@ -117,7 +167,6 @@ int main()
         voterCV.StopIfMax();
 
         Common::ThreadInfo* tInfo = votingThreadPool.GetThreadBlocking();
-        //*((UINT*)tInfo->Parameter) = clientThreadsNumber;
 
         ResumeThread(tInfo->Handle);
         
@@ -132,13 +181,40 @@ int main()
     }
 
     votingThreadPool.WaitForThreads();
+    
+    char* voteMsg = Serialize(votesContainer);
 
-    WSACleanup();
+    iResult = send(
+        connectSocket,
+        voteMsg,
+        (int)votesContainer.BufferSize(),
+        0
+    );
+
+    delete[] voteMsg;
+
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("send failed with error: %d\n", WSAGetLastError());
+        LambdaOnFinish(connectSocket);
+        return 1;
+    }
+
+    printf("Bytes Sent: %ld\n", iResult);
+
+    for (size_t i = 0; i < votingThreadParams.size(); i++)
+    {
+        VotingThreadData* vtdp = ((VotingThreadData*)votingThreadParams[i]);
+        if (vtdp) {
+            delete vtdp;
+        }
+    }
+
+    votingThreadParams.clear();
+
+    LambdaOnFinish(connectSocket);
 
     //DeleteCriticalSection(&cs);
-
-    int a;
-    std::cin >> a;
 
     return 0;
 }
@@ -193,78 +269,18 @@ Common::Vote SelectVote(const Common::VotingList votingList)
 
 DWORD __stdcall VotingProcess(LPVOID lpParam)
 {
-    UINT votesForThread = *((UINT*)lpParam);
-
-    auto LambdaOnFinishThread = [&](bool closeSocket = false, SOCKET socket = INVALID_SOCKET) {
-        if (closeSocket && socket != INVALID_SOCKET) {
-            //shutdown(socket, SD_BOTH);
-            closesocket(socket);
-        }
-        voterCV.VoterFinished();
-    };
-
-    // create a socket
-    SOCKET connectSocket = socket(AF_INET,
-        SOCK_STREAM,
-        IPPROTO_TCP);
-
-    if (connectSocket == INVALID_SOCKET)
-    {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
-        //WSACleanup();
-        LambdaOnFinishThread();
-        return 1;
-    }
-
-    // connect to server specified in serverAddress and socket connectSocket
-    if (connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR)
-    {
-        LogWinsockError("Unable to connect to server.", WSAGetLastError());
-        LambdaOnFinishThread(true, connectSocket);
-        return 1;
-    }
-
-    char buffer[defaultBufferLength];
-
-    // Send an prepared message with null terminator included
-    int iResult = recv(connectSocket, buffer, defaultBufferLength, 0);
-
-    if (iResult == SOCKET_ERROR || iResult == 0) {
-        
-        LogWinsockError("Did not receive options.", WSAGetLastError());
-        LambdaOnFinishThread(true, connectSocket);
-        return 1;
-    }
-
-    Common::VotesContainer threadVotes;
-    Common::VotingList votingList = Deserialize<Common::VotingList>(buffer);
+    VotingThreadData* vtd = ((VotingThreadData*)lpParam);
+    UINT votesForThread = vtd->NumberOfVotesPerThread;
+    Common::VotingList votingList(vtd->VotingList);
+    Common::VotesContainer* vcp = vtd->VotesContainer;
 
     for (UINT i = 0; i < votesForThread; i++)
     {
         Common::Vote vote = SelectVote(votingList);
-        threadVotes.AddVote(vote);
+        vcp->AddVote(vote);
     }
 
-    char* voteMsg = Serialize(threadVotes);
-
-    iResult = send(
-        connectSocket,
-        voteMsg,
-        (int)threadVotes.BufferSize(),
-        0
-    );
-
-    delete[] voteMsg;
-
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        LambdaOnFinishThread(true, connectSocket);
-        return 1;
-    }
-
-    printf("Bytes Sent: %ld\n", iResult);
-    LambdaOnFinishThread(true, connectSocket);
+    voterCV.VoterFinished();
 
     return 0;
 }

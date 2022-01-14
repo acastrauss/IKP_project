@@ -179,7 +179,6 @@ int main()
     std::deque<HANDLE> threadHandles = {};
     std::deque<ThreadCountVotes> threadParams = {};
 
-
     for (UINT i = 0; i < splitNum; i++)
     {
         threadParams.push_back(ThreadCountVotes(splitted[i], &countedVotesAll));
