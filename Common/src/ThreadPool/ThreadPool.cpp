@@ -130,24 +130,6 @@ namespace Common {
 		return tInfo;
 	}
 
-	void Common::ThreadPool::ReturnThreadToPool(DWORD tId)
-	{
-		/*EnterCriticalSection(&csThreads);
-
-		for (USHORT i = 0; i < (USHORT)m_Threads.size(); i++)
-		{
-			if (m_Threads[i].Id == tId) {
-				m_Threads[i].Taken = false;
-				m_Threads[i].Finished = true;
-				m_TakenThreads--;
-				WakeConditionVariable(&cvThreads);
-				break;
-			}
-		}
-
-		LeaveCriticalSection(&csThreads);*/
-	}
-
 	void Common::ThreadPool::WaitForThreads()
 	{
 		for (USHORT i = 0; i < m_Threads.size(); i++)

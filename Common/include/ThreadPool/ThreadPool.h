@@ -67,7 +67,6 @@ namespace Common {
 		/// </returns>
 		ThreadInfo* GetThreadBlocking();
 
-		void ReturnThreadToPool(DWORD tId);
 
 		void WaitForThreads();
 	};

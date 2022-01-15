@@ -1,9 +1,9 @@
 // VotingBox.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include "VBThreadData/CounterThreadData.h"
+#include "ClientThreadParam/ClientThreadParam.h"
 
 #pragma comment(lib, "Ws2_32.lib")
-
 
 #include <iostream>
 #include <string>
@@ -22,139 +22,158 @@
 #include <ThreadPool/ThreadingMethods.h>
 #include "AssembleCountedVotes/AssembleVotes.h"
 
-#pragma warning(disable:4996)
-
-UINT numberOfThreads = 10;
 
 UINT numberOfVotingCounters;
 std::time_t electionsEnd;
-Common::VotingList votingOptionsGlobal;
-AssembleVotes assembledVotes;
 
 bool InitWindowsSockets();
 void InitializeConfig();
 void InitializeVotingOptions(Common::VotingList& votingList);
 
-constexpr USHORT maxClientsConected = 10;
-constexpr USHORT maxClientProcessed = 3;
-
 DWORD WINAPI ProcessClient(LPVOID lplParam);
 DWORD WINAPI ProcessVotingCounters(LPVOID lplParam);
 
-Common::VotesContainer votesContainer;
 
-void Elections(SOCKET listenSocket);
-void CountVotes();
+
+void Elections(
+    SOCKET listenSocket,
+    Common::VotesContainer* votesContainer,
+    const Common::VotingList& votingOptions
+);
+
+void CountVotes(
+    Common::VotesContainer* votesContainer,
+    const Common::VotingList& votingOptions,
+    AssembleVotes* assembleVotesP
+);
+
 int SendFinalResults(const Common::FinalResult& results);
+
+#pragma warning(disable:4996)
+#pragma warning(disable:6031) // ignored value of getchar
 
 int main()
 {
-    InitializeConfig();
-    InitializeVotingOptions(votingOptionsGlobal);
-
-    SOCKET listenSocket = INVALID_SOCKET;
-
-    int iResult = 0;
-
-    if (!InitWindowsSockets()) {
-        LogWinsockError("Error on initialization of winsock.", -1);
-        return 1;
-    }
-
-    addrinfo* resultingAddress = NULL;
-    addrinfo hints;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;       // IPv4 address
-    hints.ai_socktype = SOCK_STREAM; // Provide reliable data streaming
-    hints.ai_protocol = IPPROTO_TCP; // Use TCP protocol
-    hints.ai_flags = AI_PASSIVE;     // 
-
-    // Resolve the server address and port
-    iResult = getaddrinfo(NULL, std::to_string(votingBoxPort).c_str(), &hints, &resultingAddress);
-    if (iResult != 0)
     {
-        printf("getaddrinfo failed with error: %d\n", iResult);
-        WSACleanup();
-        return 1;
-    }
+        std::cout << "Press any key to start application..." << std::endl;
+        std::getchar();
 
-    // Create a SOCKET for connecting to server
-    listenSocket = socket(AF_INET,      // IPv4 address famly
-        SOCK_STREAM,  // stream socket
-        IPPROTO_TCP); // TCP
+        Common::VotingList votingOptions;
+        AssembleVotes assembledVotes;
 
-    if (listenSocket == INVALID_SOCKET)
-    {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        InitializeConfig();
+        InitializeVotingOptions(votingOptions);
+
+        SOCKET listenSocket = INVALID_SOCKET;
+
+        int iResult = 0;
+
+        if (!InitWindowsSockets()) {
+            LogWinsockError("Error on initialization of winsock.", -1);
+            return 1;
+        }
+
+        addrinfo* resultingAddress = NULL;
+        addrinfo hints;
+
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_INET;       // IPv4 address
+        hints.ai_socktype = SOCK_STREAM; // Provide reliable data streaming
+        hints.ai_protocol = IPPROTO_TCP; // Use TCP protocol
+        hints.ai_flags = AI_PASSIVE;     // 
+
+        // Resolve the server address and port
+        iResult = getaddrinfo(NULL, std::to_string(votingBoxPort).c_str(), &hints, &resultingAddress);
+        if (iResult != 0)
+        {
+            printf("getaddrinfo failed with error: %d\n", iResult);
+            WSACleanup();
+            return 1;
+        }
+
+        // Create a SOCKET for connecting to server
+        listenSocket = socket(AF_INET,      // IPv4 address famly
+            SOCK_STREAM,  // stream socket
+            IPPROTO_TCP); // TCP
+
+        if (listenSocket == INVALID_SOCKET)
+        {
+            printf("socket failed with error: %ld\n", WSAGetLastError());
+            freeaddrinfo(resultingAddress);
+            WSACleanup();
+            return 1;
+        }
+
+        // Setup the TCP listening socket - bind port number and local address 
+        // to socket
+        iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
+        if (iResult == SOCKET_ERROR)
+        {
+            printf("bind failed with error: %d\n", WSAGetLastError());
+            freeaddrinfo(resultingAddress);
+            closesocket(listenSocket);
+            WSACleanup();
+            return 1;
+        }
+
+        // Since we don't need resultingAddress any more, free it
         freeaddrinfo(resultingAddress);
-        WSACleanup();
-        return 1;
-    }
 
-    // Setup the TCP listening socket - bind port number and local address 
-    // to socket
-    iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("bind failed with error: %d\n", WSAGetLastError());
-        freeaddrinfo(resultingAddress);
+        //// All connections are by default accepted by protocol stek if socket is in listening mode.
+        //// With SO_CONDITIONAL_ACCEPT parameter set to true, connections will not be accepted by default
+        bool bOptVal = true;
+        int bOptLen = sizeof(bool);
+        iResult = setsockopt(listenSocket, SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (char*)&bOptVal, bOptLen);
+
+        if (iResult == SOCKET_ERROR) {
+            printf("setsockopt for SO_CONDITIONAL_ACCEPT failed with error: %u\n", WSAGetLastError());
+        }
+
+        unsigned long  mode = 1;
+        if (ioctlsocket(listenSocket, FIONBIO, &mode) != 0) {
+            printf("ioctlsocket failed with error.");
+        }
+
+
+        // Set listenSocket in listening mode
+        iResult = listen(listenSocket, SOMAXCONN);
+        if (iResult == SOCKET_ERROR)
+        {
+            printf("listen failed with error: %d\n", WSAGetLastError());
+            closesocket(listenSocket);
+            WSACleanup();
+            return 1;
+        }
+
+        Common::VotesContainer votesContainer;
+
+        printf("Server initialized, waiting for clients.\n");
+        Elections(listenSocket, &votesContainer, votingOptions);
+        CountVotes(&votesContainer, votingOptions, &assembledVotes);
+
+        Common::FinalResult finalResult(assembledVotes.GetAssembledVotes(), votingOptions.GetOptions());
+
+        SendFinalResults(finalResult);
+
+        //salji brojacima
+        //primi prebrojane
+        //salji inf ser - done
+
+        // cleanup
         closesocket(listenSocket);
         WSACleanup();
-        return 1;
+
     }
 
-    // Since we don't need resultingAddress any more, free it
-    freeaddrinfo(resultingAddress);
-
-    //// All connections are by default accepted by protocol stek if socket is in listening mode.
-    //// With SO_CONDITIONAL_ACCEPT parameter set to true, connections will not be accepted by default
-    bool bOptVal = true;
-    int bOptLen = sizeof(bool);
-    iResult = setsockopt(listenSocket, SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (char*)&bOptVal, bOptLen);
-    
-    if (iResult == SOCKET_ERROR) {
-        printf("setsockopt for SO_CONDITIONAL_ACCEPT failed with error: %u\n", WSAGetLastError());
-    }
-
-    unsigned long  mode = 1;
-    if (ioctlsocket(listenSocket, FIONBIO, &mode) != 0) {
-        printf("ioctlsocket failed with error.");
-    }
-
-
-    // Set listenSocket in listening mode
-    iResult = listen(listenSocket, SOMAXCONN);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("listen failed with error: %d\n", WSAGetLastError());
-        closesocket(listenSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    printf("Server initialized, waiting for clients.\n");
-    Elections(listenSocket);
-    CountVotes();
-    
-    Common::FinalResult finalResult(assembledVotes.GetAssembledVotes(), votingOptionsGlobal.GetOptions());
-
-    SendFinalResults(finalResult);
-
-    //salji brojacima
-    //primi prebrojane
-    //salji inf ser - done
-
-    // cleanup
-    closesocket(listenSocket);
-    WSACleanup();
+    std::cout << "Press enter to exit..." << std::endl;
+    std::getchar();
 
     return 0;
 }
 
-void Elections(SOCKET listenSocket)
+void Elections(SOCKET listenSocket, Common::VotesContainer* votesContainer, const Common::VotingList& votingOptions)
 {
-    std::deque<SOCKET> acceptedSockets = {};
+    std::deque<LPVOID> threadParams = {};
 
     std::deque<HANDLE> threadHandles = {};
 
@@ -193,7 +212,9 @@ void Elections(SOCKET listenSocket)
                    // server will handle only one client.
             SOCKET acceptedSocket = accept(listenSocket, NULL, NULL);
 
-            acceptedSockets.push_back(acceptedSocket);
+            threadParams.push_back(
+                new ClientThreadParam(acceptedSocket, votesContainer, votingOptions)
+            );
 
             if (acceptedSocket == INVALID_SOCKET)
             {
@@ -204,7 +225,7 @@ void Elections(SOCKET listenSocket)
             DWORD tId;
 
             HANDLE h = CreateThread(
-                NULL, 0, ProcessClient, &acceptedSockets[acceptedSockets.size() - 1], 0, &tId
+                NULL, 0, ProcessClient, threadParams[threadParams.size() - 1], 0, &tId
             );
 
             threadHandles.push_back(h);
@@ -217,9 +238,12 @@ void Elections(SOCKET listenSocket)
 
 #include <algorithm>
 
-void CountVotes()
-{
-    auto splittedvotes = votesContainer.GetEquallySeparatedVotes((size_t)votingCountersNumber);
+void CountVotes(
+    Common::VotesContainer* votesContainer,
+    const Common::VotingList& votingOptions,
+    AssembleVotes* assembleVotesP
+){
+    auto splittedvotes = votesContainer->GetEquallySeparatedVotes((size_t)votingCountersNumber);
 
     // make this array
     std::vector<LPVOID> counterThreadData = {};
@@ -258,8 +282,9 @@ void CountVotes()
         CounterThreadData* ctdp = new CounterThreadData(
             connectSocket, 
             Common::VotesToCount(
-                splittedvotes[i], votingOptionsGlobal.GetOptions()
-            )
+                splittedvotes[i], votingOptions.GetOptions()
+            ),
+            assembleVotesP
         );
 
         counterThreadData.push_back(
@@ -337,7 +362,7 @@ DWORD __stdcall ProcessVotingCounters(LPVOID lplParam)
     
     Common::CountedVotes countedVotes = Deserialize<Common::CountedVotes>(recvBuff);
 
-    assembledVotes.AddVotes(countedVotes.GetCountedVotes());
+    ctd->AssembledVotesP->AddVotes(countedVotes.GetCountedVotes());
 
     shutdown(connectSocket, SD_BOTH);
     closesocket(connectSocket);
@@ -349,8 +374,8 @@ DWORD __stdcall ProcessVotingCounters(LPVOID lplParam)
 
 DWORD __stdcall ProcessClient(LPVOID lplParam)
 {
-    SOCKET accSocket = *((SOCKET*)lplParam);
-    
+    ClientThreadParam ctp = *((ClientThreadParam*)lplParam);
+
     char recvBuff[defaultBufferLength];
     int iResult;
     int iSelectResult = 0;
@@ -362,10 +387,10 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
     };
 
     if (iSelectResult = ioctlsocket(
-        accSocket, FIONBIO, &mode
+        ctp.AcceptedSocket, FIONBIO, &mode
     ) != 0) {
         LogWinsockError("Error when setting accepted socket to be non-blocking.", WSAGetLastError());
-        LambdaOnFinishThread(accSocket);
+        LambdaOnFinishThread(ctp.AcceptedSocket);
         return 1;
     }   
 
@@ -384,7 +409,7 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
     while (true)
     {
         FD_ZERO(&writefds);
-        FD_SET(accSocket, &writefds);
+        FD_SET(ctp.AcceptedSocket, &writefds);
 
         iSelectResult = select(0, NULL, &writefds, NULL, &timeVal);
 
@@ -393,26 +418,26 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
                 "Send failed when processing client.",
                 WSAGetLastError()
             );
-            LambdaOnFinishThread(accSocket);
+            LambdaOnFinishThread(ctp.AcceptedSocket);
         }
         // timeout
         else if (iSelectResult == 0) {
             if (++numOfTries == maxNumOfTries){
-                LambdaOnFinishThread(accSocket);
+                LambdaOnFinishThread(ctp.AcceptedSocket);
                 return 1;
             }
             else {
                 continue;
             }
         }
-        else if (FD_ISSET(accSocket, &writefds)) {
+        else if (FD_ISSET(ctp.AcceptedSocket, &writefds)) {
             
-            char* message = Serialize(votingOptionsGlobal);
+            char* message = Serialize(ctp.VotingOptions);
 
             iResult = send(
-                accSocket,
+                ctp.AcceptedSocket,
                 message,
-                (int)votingOptionsGlobal.BufferSize(),
+                (int)ctp.VotingOptions.BufferSize(),
                 0
             );
 
@@ -421,7 +446,7 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
             if (iResult == SOCKET_ERROR)
             {
                 LogWinsockError("recv failed", WSAGetLastError());
-                LambdaOnFinishThread(accSocket);
+                LambdaOnFinishThread(ctp.AcceptedSocket);
                 return 1;
             }
             
@@ -430,7 +455,7 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
         }
         else {
             LogWinsockError("Undefined behaviour at send.", WSAGetLastError());
-            LambdaOnFinishThread(accSocket);
+            LambdaOnFinishThread(ctp.AcceptedSocket);
             return 1;
         }
     }
@@ -439,7 +464,7 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
     while (true)
     {
         FD_ZERO(&readfds);
-        FD_SET(accSocket, &readfds);
+        FD_SET(ctp.AcceptedSocket, &readfds);
 
         iSelectResult = select(0, &readfds, NULL, NULL, &timeVal);
 
@@ -448,23 +473,23 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
                 "Receive failed when processing client.",
                 WSAGetLastError()
             );
-            LambdaOnFinishThread(accSocket);
+            LambdaOnFinishThread(ctp.AcceptedSocket);
             return 1;
         }
         // timeout
         else if (iSelectResult == 0) {
             if (++numOfTries == maxNumOfTries){
-                LambdaOnFinishThread(accSocket);
+                LambdaOnFinishThread(ctp.AcceptedSocket);
                 return 1;
             }
             else {
                 continue;
             }
         }
-        else if (FD_ISSET(accSocket, &readfds)) {
+        else if (FD_ISSET(ctp.AcceptedSocket, &readfds)) {
             
             iResult = recv(
-                accSocket,
+                ctp.AcceptedSocket,
                 recvBuff,
                 defaultBufferLength,
                 0
@@ -473,7 +498,7 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
             if (iResult == SOCKET_ERROR)
             {
                 LogWinsockError("recv failed", WSAGetLastError());
-                LambdaOnFinishThread(accSocket);
+                LambdaOnFinishThread(ctp.AcceptedSocket);
                 return 1;
             }
 
@@ -484,7 +509,7 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
                 clientVotes.begin(),
                 clientVotes.end(),
                 [&](const Common::Vote& v) {
-                    votesContainer.AddVote(v);
+                    ctp.VotesContainer->AddVote(v);
 
                     std::cout << "Voter " << v.VoterId << " voted for "
                         << v.PartyNumber << " at " << ctime(&v.VoteTime) << std::endl;
@@ -496,12 +521,12 @@ DWORD __stdcall ProcessClient(LPVOID lplParam)
         }
         else {
             LogWinsockError("Undefined behaviour at receive.", WSAGetLastError());
-            LambdaOnFinishThread(accSocket);
+            LambdaOnFinishThread(ctp.AcceptedSocket);
             return 1;
         }
     }
     
-    LambdaOnFinishThread(accSocket);
+    LambdaOnFinishThread(ctp.AcceptedSocket);
 
     return 0;
 }
